@@ -129,11 +129,11 @@ public class MainBehaviour : MonoBehaviour
                     arObject.Update();
             }
         }
-        
+
         if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
-            
+
             switch (touch.phase)
             {
                 case TouchPhase.Began:
@@ -151,7 +151,7 @@ public class MainBehaviour : MonoBehaviour
 
                     Vector2 touchPosition = Input.GetTouch(0).position;
                     Ray ray = Camera.main.ScreenPointToRay(new Vector3(touchPosition.x, touchPosition.y, 0.0f));
-                    
+
                     RaycastHit hitObject;
 
                     GraphicRaycaster _mainCanvas = GameObject.FindGameObjectWithTag("InAppCanvas").GetComponent<GraphicRaycaster>();
@@ -342,8 +342,9 @@ public class MainBehaviour : MonoBehaviour
 
         while (true)
         {
-            
-            if (_clientInfo.InsideOption) {
+
+            if (_clientInfo.InsideOption)
+            {
                 _clientInfo.OriginalValuesAreSet = false;
                 foreach (var arObject in _arObjects.Values)
                     arObject.Destroy();
@@ -478,117 +479,107 @@ public class MainBehaviour : MonoBehaviour
         while (true)
         {
 
-            if (_clientInfo.InsideOption)
+            string latitude = _clientInfo.CurrentLatitude.ToString();
+            string longitude = _clientInfo.CurrentLongitude.ToString();
+            string altitude = _clientInfo.CurrentAltitude.ToString();
+            string latitudeOption;
+            string longitudeOption;
+            if (_clientInfo.DistanceOption == 1)
             {
-                _clientInfo.OriginalValuesAreSet = false;
-                foreach (var arObject in _ar3dObjects.Values)
-                    arObject.Destroy();
-                _ar3dObjects.Clear();
+                latitudeOption = "0.0002";
+                longitudeOption = "0.0001";
+            }
+            else if (_clientInfo.DistanceOption == 2)
+            {
+                latitudeOption = "0.0004";
+                longitudeOption = "0.0002";
             }
             else
             {
+                latitudeOption = "0.0006";
+                longitudeOption = "0.0003";
+            }
 
-                string latitude = _clientInfo.CurrentLatitude.ToString();
-                string longitude = _clientInfo.CurrentLongitude.ToString();
-                string altitude = _clientInfo.CurrentAltitude.ToString();
-                string latitudeOption;
-                string longitudeOption;
-                if (_clientInfo.DistanceOption == 1)
+
+            // 테스트용 GPS
+            //latitude = "37.450571";
+            //longitude = "126.656903";
+            //altitude = "53.000000";
+
+            WWWForm form = new WWWForm();
+            form.AddField("latitude", latitude);
+            form.AddField("longitude", longitude);
+            form.AddField("altitude", altitude);
+            form.AddField("latitudeOption", latitudeOption);
+            form.AddField("longitudeOption", longitudeOption);
+
+            // 3D 오브젝트 목록 가져오기: GPS 정보를 서버에 POST
+            using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/get3D_distance.php", form))
+            {
+                // POST 전송
+                yield return www.SendWebRequest();
+
+                if (www.isNetworkError || www.isHttpError)
                 {
-                    latitudeOption = "0.0002";
-                    longitudeOption = "0.0001";
-                }
-                else if (_clientInfo.DistanceOption == 2)
-                {
-                    latitudeOption = "0.0004";
-                    longitudeOption = "0.0002";
+                    Debug.Log(www.error);
+                    // TODO: 필요시 재시도
                 }
                 else
                 {
-                    latitudeOption = "0.0006";
-                    longitudeOption = "0.0003";
-                }
+                    // 서버에서 Json 응답으로 준 오브젝트 리스트를 _ar3dObjects에 적용
+                    string responseJsonString = www.downloadHandler.text;
+                    //JsonPlaneDataArray newObjectList = JsonUtility.FromJson<JsonPlaneDataArray>(responseJsonString);
+                    Json3dDataArray newObjectList = JsonUtility.FromJson<Json3dDataArray>(responseJsonString);
 
-
-                // 테스트용 GPS
-                //latitude = "37.450571";
-                //longitude = "126.656903";
-                //altitude = "53.000000";
-
-                WWWForm form = new WWWForm();
-                form.AddField("latitude", latitude);
-                form.AddField("longitude", longitude);
-                form.AddField("altitude", altitude);
-                form.AddField("latitudeOption", latitudeOption);
-                form.AddField("longitudeOption", longitudeOption);
-
-                // 3D 오브젝트 목록 가져오기: GPS 정보를 서버에 POST
-                using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/get3D_distance.php", form))
-                {
-                    // POST 전송
-                    yield return www.SendWebRequest();
-
-                    if (www.isNetworkError || www.isHttpError)
+                    if (newObjectList.data.Length == 0)
                     {
-                        Debug.Log(www.error);
-                        // TODO: 필요시 재시도
+                        // 받아온 리스트에 아무것도 없는 경우 - 리스트 클리어
+                        foreach (var arObject in _ar3dObjects.Values)
+                            arObject.Destroy();
+
+                        _ar3dObjects.Clear();
                     }
                     else
                     {
-                        // 서버에서 Json 응답으로 준 오브젝트 리스트를 _ar3dObjects에 적용
-                        string responseJsonString = www.downloadHandler.text;
-                        //JsonPlaneDataArray newObjectList = JsonUtility.FromJson<JsonPlaneDataArray>(responseJsonString);
-                        Json3dDataArray newObjectList = JsonUtility.FromJson<Json3dDataArray>(responseJsonString);
+                        // 받아온 오브젝트의 Ad Number 모으기 (유일한 번호인 Ad Number로 오브젝트를 구별하기 위함)
+                        var newAdNumbers = new HashSet<int>();
+                        foreach (var newObject in newObjectList.data)
+                            newAdNumbers.Add(newObject.object_no);
 
-                        if (newObjectList.data.Length == 0)
+                        // _arObjects의 ArObject들 중 받아온 리스트에 없는 것 삭제
+                        var oldAdNumbers = new List<int>(_ar3dObjects.Keys);
+                        foreach (var oldNumber in oldAdNumbers)
                         {
-                            // 받아온 리스트에 아무것도 없는 경우 - 리스트 클리어
-                            foreach (var arObject in _ar3dObjects.Values)
-                                arObject.Destroy();
-
-                            _ar3dObjects.Clear();
+                            if (!newAdNumbers.Contains(oldNumber))
+                            {
+                                _ar3dObjects[oldNumber].Destroy();
+                                _ar3dObjects.Remove(oldNumber);
+                            }
                         }
-                        else
+
+                        // 받아온 리스트에서 새로 생긴 ArObject 생성
+                        foreach (Json3dData json3dArObject in newObjectList.data)
                         {
-                            // 받아온 오브젝트의 Ad Number 모으기 (유일한 번호인 Ad Number로 오브젝트를 구별하기 위함)
-                            var newAdNumbers = new HashSet<int>();
-                            foreach (var newObject in newObjectList.data)
-                                newAdNumbers.Add(newObject.object_no);
+                            // 기존 리스트에 이미 있는 경우 안 만듦
+                            if (_ar3dObjects.Keys.Contains(json3dArObject.object_no))
+                                continue;
 
-                            // _arObjects의 ArObject들 중 받아온 리스트에 없는 것 삭제
-                            var oldAdNumbers = new List<int>(_ar3dObjects.Keys);
-                            foreach (var oldNumber in oldAdNumbers)
+                            // 새로운 ArObject 생성
+                            Ad3dInfo tmpAdInfo = new Ad3dInfo
                             {
-                                if (!newAdNumbers.Contains(oldNumber))
-                                {
-                                    _ar3dObjects[oldNumber].Destroy();
-                                    _ar3dObjects.Remove(oldNumber);
-                                }
-                            }
-
-                            // 받아온 리스트에서 새로 생긴 ArObject 생성
-                            foreach (Json3dData json3dArObject in newObjectList.data)
-                            {
-                                // 기존 리스트에 이미 있는 경우 안 만듦
-                                if (_ar3dObjects.Keys.Contains(json3dArObject.object_no))
-                                    continue;
-
-                                // 새로운 ArObject 생성
-                                Ad3dInfo tmpAdInfo = new Ad3dInfo
-                                {
-                                    ObjectNumber = json3dArObject.object_no,
-                                    typeName = json3dArObject.typeName,
-                                    GpsInfo = new Vector3(json3dArObject.latitude, json3dArObject.longitude,
-                                    json3dArObject.altitude),
-                                    Bearing = json3dArObject.bearing,
-                                    TextAlternateToTexture = "",
-                                };
-                                _ar3dObjects[json3dArObject.object_no] = new Ar3dPlane(tmpAdInfo, _clientInfo);
-                            }
+                                ObjectNumber = json3dArObject.object_no,
+                                typeName = json3dArObject.typeName,
+                                GpsInfo = new Vector3(json3dArObject.latitude, json3dArObject.longitude,
+                                json3dArObject.altitude),
+                                Bearing = json3dArObject.bearing,
+                                TextAlternateToTexture = "",
+                            };
+                            _ar3dObjects[json3dArObject.object_no] = new Ar3dPlane(tmpAdInfo, _clientInfo);
                         }
                     }
                 }
             }
+
             // 오브젝트 목록 리퀘스트 주기: `intervalInSecond`초.
             yield return new WaitForSeconds(intervalInSecond);
         }
