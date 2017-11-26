@@ -99,7 +99,7 @@ public class MainBehaviour : MonoBehaviour
 
         // scene에 있는 AR 카메라 가져오기
         _clientInfo.MainCamera = GameObject.FindGameObjectWithTag("MainCamera");
-
+        
         // GPS 좌표 정보 갱신용 코루틴 시작
         StartCoroutine(GetGps(Constants.GpsMeasureIntervalInSecond));
 
@@ -113,7 +113,6 @@ public class MainBehaviour : MonoBehaviour
         // 주변 오브젝트 목록 주기적 업데이트를 위한 코루틴 시작
         StartCoroutine(GetArObjectList(5.0f));
         StartCoroutine(Get3dArObjectList(5.0f));
-        //StartCoroutine(GetCommentCanvas(5.0f));
     }
 
     private void Update()
@@ -146,46 +145,49 @@ public class MainBehaviour : MonoBehaviour
                     break;
 
                 case TouchPhase.Ended:
-                    Debug.Log("Touch Ended!");
-                    // 터치를 뗀 경우 - 터치한 위치의 광선에 닿는 물체의 BannerUrl을 브라우저에서 열고, 포인트 적립을 서버에 요청한다.
-
-                    Vector2 touchPosition = Input.GetTouch(0).position;
-                    Ray ray = Camera.main.ScreenPointToRay(new Vector3(touchPosition.x, touchPosition.y, 0.0f));
-                    
-                    RaycastHit hitObject;
-
-                    GraphicRaycaster _mainCanvas = GameObject.FindGameObjectWithTag("InAppCanvas").GetComponent<GraphicRaycaster>();
-                    List<RaycastResult> _results = new List<RaycastResult>();
-                    PointerEventData _ped = new PointerEventData(null);
-                    _ped.position = touch.position;
-                    _mainCanvas.Raycast(_ped, _results);
-
-                    // UI를 터치하지 않은 경우
-                    if (_results.Count == 0)
+                    if (inAppCanvas.activeSelf == true)
                     {
+                        Debug.Log("Touch Ended!");
+                        // 터치를 뗀 경우 - 터치한 위치의 광선에 닿는 물체의 BannerUrl을 브라우저에서 열고, 포인트 적립을 서버에 요청한다.
+                        Vector2 touchPosition = Input.GetTouch(0).position;
+                        Ray ray = Camera.main.ScreenPointToRay(new Vector3(touchPosition.x, touchPosition.y, 0.0f));
 
-                        if (Physics.Raycast(ray, out hitObject, Mathf.Infinity))
+                        RaycastHit hitObject;
+
+                        GraphicRaycaster _mainCanvas = inAppCanvas.GetComponent<GraphicRaycaster>();
+                        List<RaycastResult> _results = new List<RaycastResult>();
+                        PointerEventData _ped = new PointerEventData(null);
+                        _ped.position = touch.position;
+                        // GraphicRaycaster의 focus가 maincanvas에 맞춰져있음.
+                        _mainCanvas.Raycast(_ped, _results);
+
+                        // Main InApp UI를 터치하지 않은 경우
+                        Debug.Log("_result.Count = " + _results.Count.ToString());
+                        if (_results.Count == 0)
                         {
-                            if (hitObject.collider.GetComponent<DataContainer>().ObjectType == ArObjectType.AdPlane)
+                            if (Physics.Raycast(ray, out hitObject, Mathf.Infinity))
                             {
-                                Debug.Log("ArPlane Touch!");
-                                Application.OpenURL(hitObject.collider.GetComponent<DataContainer>().BannerUrl);
-                                int adNumber = hitObject.collider.GetComponent<DataContainer>().AdNum;
-                                StartCoroutine(EarnPointCoroutine(adNumber));
+                                if (hitObject.collider.GetComponent<DataContainer>().ObjectType == ArObjectType.AdPlane)
+                                {
+                                    Debug.Log("ArPlane Touch!");
+                                    Application.OpenURL(hitObject.collider.GetComponent<DataContainer>().BannerUrl);
+                                    int adNumber = hitObject.collider.GetComponent<DataContainer>().AdNum;
+                                    StartCoroutine(EarnPointCoroutine(adNumber));
+                                }
                             }
-                            else if (hitObject.collider.GetComponent<DataContainer>().ObjectType == ArObjectType.ArComment)
+                            else
                             {
-                                Debug.Log("CommentCanvas Touch!");
-                                //commentCanvas.SetActive(true);
-                                //inAppCanvas.SetActive(false);
+                                // RaycastALL
+                                EventSystem.current.RaycastAll(_ped, _results);
+                                if (_results.Count > 0)
+                                {
+                                    Debug.Log("Comment Canvas Touch!");
 
-                                // 연관 광고 정보 패싱
-                                commentViewCanvas.GetComponent<CommentCanvasBehaviour>().adNum = hitObject.collider.GetComponent<DataContainer>().AdNum;
-                                // CreateCommentView();
-                                // - list clear
-                                // - get comment list
-                                // - list add
-                                // - scroll view area calculate
+                                    GameObject _canvasObject = _results[_results.Count - 1].gameObject.transform.parent.gameObject;
+
+                                    commentViewCanvas.GetComponent<CommentViewCanvasBehaviour>().adNumber = _canvasObject.GetComponent<DataContainer>().AdNum;
+                                    commentViewCanvas.GetComponent<CommentViewCanvasBehaviour>().OnInit();
+                                }
                             }
                         }
                     }
@@ -375,9 +377,9 @@ public class MainBehaviour : MonoBehaviour
 
 
                 //테스트용 GPS 
-                //latitude = "37.450700";
-                //longitude = "126.657100";
-                //altitude = "53.000000";
+                latitude = "37.450700";
+                longitude = "126.657100";
+                altitude = "53.000000";
                 //_clientInfo.StartingLatitude = 37.450700f;
                 //_clientInfo.StartingLongitude = 126.657100f;
                 //_clientInfo.StartingAltitude = 53.000000f;
@@ -656,18 +658,18 @@ public class MainBehaviour : MonoBehaviour
             averageOfDifferences %= 360f;
 
 
-            //foreach (var arObject in _arObjects.Values)
-            //{
-            //    // 모든 물체를 생성시 카메라 포지션 기준 회전
-            //    arObject.GameObj.transform.RotateAround(arObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition
-            //        , new Vector3(0.0f, 1.0f, 0.0f), averageOfDifferences - _clientInfo.CorrectedBearingOffset);
+            foreach (var arObject in _arObjects.Values)
+            {
+                // 모든 물체를 생성시 카메라 포지션 기준 회전
+                arObject.GameObj.transform.RotateAround(arObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition
+                    , new Vector3(0.0f, 1.0f, 0.0f), averageOfDifferences - _clientInfo.CorrectedBearingOffset);
 
-            //    if ((arObject.ObjectType == ArObjectType.AdPlane) && (((ArPlane)arObject).CommentCanvas != null))
-            //    {
-            //        ((ArPlane)arObject).CommentCanvas.GameObj.transform.RotateAround(arObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition
-            //        , new Vector3(0.0f, 1.0f, 0.0f), averageOfDifferences - _clientInfo.CorrectedBearingOffset);
-            //    }
-            //}
+                if ((arObject.ObjectType == ArObjectType.AdPlane) && (((ArPlane)arObject).CommentCanvas != null))
+                {
+                    ((ArPlane)arObject).CommentCanvas.GameObj.transform.RotateAround(arObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition
+                    , new Vector3(0.0f, 1.0f, 0.0f), averageOfDifferences - _clientInfo.CorrectedBearingOffset);
+                }
+            }
             // Bearing Offset 값을 새로 계산된 값으로 반영
             _clientInfo.CorrectedBearingOffset = averageOfDifferences;
 
@@ -902,11 +904,6 @@ public class MainBehaviour : MonoBehaviour
         }
     }
 
-    public void HideCommnetView()
-    {
-        commentViewCanvas.SetActive(false);
-        inAppCanvas.SetActive(true);
-    }
     public void Object3DMenuShowAndHide()
     {
         if (object3DMenu.activeSelf)
@@ -914,6 +911,7 @@ public class MainBehaviour : MonoBehaviour
         else
             object3DMenu.SetActive(true);
     }
+
     public void TestButton()
     {
         //_clientInfo.LodingCanvas.GetComponent<LoadingCanvasBehaviour>().ShowLodingCanvas();

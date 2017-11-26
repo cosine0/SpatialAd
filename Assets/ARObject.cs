@@ -163,7 +163,6 @@ public class ArPlane : ArObject
         GameObj.transform.localScale = new Vector3(Info.Width, Info.Height, Info.Height);
         GameObj.transform.position = unityPosition;
         GameObj.transform.eulerAngles = new Vector3(90.0f, Info.Bearing - 90.0f, 90.0f);
-        GameObj.transform.RotateAround(ClientInfoObj.MainCamera.transform.position, new Vector3(0.0f, 1.0f, 0.0f), ClientInfoObj.CorrectedBearingOffset); // 카메라 포지션 기준 회전
         // GameOBJ.transform.rotation = Quaternion.Euler(90.0f, -90.0f, 90.0f);
         // 모든 plane은 new Vector3(90.0f, -90.0f, 90.0f); 만큼 회전해야함 
     }
@@ -191,13 +190,15 @@ public class ArPlane : ArObject
                 // instantiate 한 object 정보
                 Debug.Log("canvas Create");
                 GameObject canvasObject = MonoBehaviour.Instantiate((Resources.Load("Prefabs/CommentCanvas") as GameObject)) as GameObject;
+                canvasObject.AddComponent<DataContainer>().ObjectType = ArObjectType.ArCommentCanvas;
+                canvasObject.GetComponent<DataContainer>().AdNum = this.Info.AdNumber;
+
                 // ad plane member로 할당
                 arPlaneObject.CommentCanvas = new ArCommentCanvas(canvasObject);
                 // ad plane 인근 위치로 이동 및 회전
                 yield return new WaitUntil(() => (arPlaneObject.GameObj != null));
                 CommentCanvas.GameObj.transform.position = this.GameObj.transform.position;
                 CommentCanvas.GameObj.transform.eulerAngles = new Vector3(0.0f, this.Info.Bearing, 0.0f);
-                //CommentCanvas.GameObj.transform.localEulerAngles = new Vector3(0.0f, this.Info.Bearing, 0.0f);
                 CommentCanvas.GameObj.transform.localScale = new Vector3(0.005f, 0.005f, 0.005f);
                 // commentCanvas move and rotate
                 yield return new WaitUntil(() => (CommentCanvas != null && this.GameObj != null));
@@ -222,11 +223,12 @@ public class ArPlane : ArObject
                 if (commentList.data.Length == 0)
                 {
                     GameObject commentPanel = MonoBehaviour.Instantiate(Resources.Load("Prefabs/CommentPanel") as GameObject) as GameObject;
+
                     // 부모 자식 관계 생성
                     commentPanel.transform.SetParent(canvasObject.transform.GetChild(0).GetChild(1), false); // parent properties inheritance false
                                                                                                              // comment panel object transform에서 Text Component Child 2개(id, comment)를 찾아 텍스트 수정.
                     commentPanel.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = "No comment yet";
-                    //commentPanel.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = "";
+                    commentPanel.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = " ";
                 }
                 else
                 {
@@ -235,11 +237,17 @@ public class ArPlane : ArObject
                         // comment 정보 채우기
                         // comment panel instantiate
                         GameObject commentPanel = MonoBehaviour.Instantiate(Resources.Load("Prefabs/CommentPanel") as GameObject) as GameObject;
+
                         // 부모 자식 관계 생성
                         commentPanel.transform.SetParent(canvasObject.transform.GetChild(0).GetChild(1), false); // parent properties inheritance false
                                                                                                                  // comment panel object transform에서 Text Component Child 2개(id, comment)를 찾아 텍스트 수정.
                         commentPanel.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = commentList.data[i].userId;
-                        //++++++++++++++++ 텍스트 길이에 따른 오버플로우 처리 필요++++++++++++++++++++
+                        //++++++++++++++++ 텍스트 길이에 따른 오버플로우 처리++++++++++++++++++++
+                        if (commentList.data[i].comment.Length > 17)
+                        {
+                            commentList.data[i].comment = commentList.data[i].comment.Remove(17);
+                            commentList.data[i].comment = commentList.data[i].comment + "...";
+                        }
                         commentPanel.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = commentList.data[i].comment;
                     }
                 }

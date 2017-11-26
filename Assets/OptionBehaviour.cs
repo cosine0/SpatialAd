@@ -72,6 +72,7 @@ public class OptionBehaviour : MonoBehaviour
     public void OnClickLogout()
     {
         StartCoroutine(Logout());
+        _clientInfo.OriginalValuesAreSet = false;
     }
 
     private IEnumerator Logout()
