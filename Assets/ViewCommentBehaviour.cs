@@ -15,24 +15,14 @@ public class viewCommentBehaviour : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        
+        _userInfo = GameObject.FindGameObjectWithTag("UserInfo").GetComponent<UserInfo>();
+
         //Cards is an array of data
         opjName = "optionComment";
         path = "Prefabs/" + opjName;
-        
-        for (int i = 0; i < 3; i++)
-        {
-            //ItemGameObject is my prefab pointer that i previous made a public property  
-            //and  assigned a prefab to it
-            GameObject card = Instantiate(Resources.Load(path)) as GameObject;
 
-            //scroll = GameObject.Find("CardScroll");
-            if (ScrollViewGameObject != null)
-            {
-                //ScrollViewGameObject container object
-                card.transform.SetParent(ScrollViewGameObject.transform, false);
-            }
-        }
+        StartCoroutine(GetOptionCommentCoroutine());
+
     }
 
     // Update is called once per frame
@@ -63,10 +53,53 @@ public class viewCommentBehaviour : MonoBehaviour
             else
             {
                 fromServJson = www.downloadHandler.text;
-                
+
+                // comment 생성
+                for (int i = 0; i < 3; i++)
+                {
+                    //ItemGameObject is my prefab pointer that i previous made a public property  
+                    //and  assigned a prefab to it
+                    GameObject card = Instantiate(Resources.Load(path)) as GameObject;
+
+                    //scroll = GameObject.Find("CardScroll");
+                    if (ScrollViewGameObject != null)
+                    {
+                        //ScrollViewGameObject container object
+                        card.transform.SetParent(ScrollViewGameObject.transform, false);
+                    }
+                }
+
+                // 지도 생성
+
             }
         }
     }
+
+    private IEnumerator DeleteOptionCommentCoroutine()
+    {
+        //string userID = _userInfo.UserId;
+
+        string comment;
+
+        WWWForm deleteCommentForm = new WWWForm();
+        deleteCommentForm.AddField("comment", comment);
+
+        using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/delete_comment.php", deleteCommentForm))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
+                Debug.Log(www.error);
+            else
+            {
+                Debug.Log("delete");
+
+            }
+        }
+
+        StartCoroutine(GetOptionCommentCoroutine());
+    }
+
 
 
 
