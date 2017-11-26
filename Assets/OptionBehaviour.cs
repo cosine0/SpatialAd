@@ -151,8 +151,8 @@ public class OptionBehaviour : MonoBehaviour
         }
     }
     
-    public void clickViewBtn()
+    public void clickCommentBtn()
     {
-        SceneManager.LoadScene("viewComment");
+        SceneManager.LoadScene("mapOption");
     }
 }
