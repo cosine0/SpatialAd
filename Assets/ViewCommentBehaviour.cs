@@ -69,10 +69,35 @@ public class viewCommentBehaviour : MonoBehaviour
                     }
                 }
 
-                // 지도 생성
 
             }
         }
+    }
+
+    private IEnumerator GetOptionMapCoroutine()
+    {
+        //string userID = _userInfo.UserId;
+
+        string comment;
+
+        WWWForm getMapForm = new WWWForm();
+        getMapForm.AddField("comment", comment);
+
+        using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/get_map.php", getMapForm))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
+                Debug.Log(www.error);
+            else
+            {
+                
+                // 지도 가져오기
+
+
+            }
+        }
+
     }
 
     private IEnumerator DeleteOptionCommentCoroutine()
@@ -98,9 +123,7 @@ public class viewCommentBehaviour : MonoBehaviour
         }
 
         StartCoroutine(GetOptionCommentCoroutine());
+        // 지도 없애기
+
     }
-
-
-
-
 }
