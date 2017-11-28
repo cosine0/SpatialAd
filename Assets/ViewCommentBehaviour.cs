@@ -18,6 +18,10 @@ public class ViewCommentBehaviour : MonoBehaviour
 
     public RawImage mapImage;
 
+    // 안드로이드 Toast를 띄울 때 사용되는 임시 객체
+    private string _toastString;
+    private AndroidJavaObject _currentActivity;
+
     // Use this for initialization
     void Start()
     {
@@ -68,6 +72,8 @@ public class ViewCommentBehaviour : MonoBehaviour
                     optionCommentPanel.transform.GetChild(1).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = optionCommentList.data[i].comment;
                     optionCommentPanel.transform.name = "comment" + i.ToString();
                     optionCommentPanel.transform.GetChild(0).GetChild(1).name=i.ToString();
+                    optionCommentPanel.transform.GetChild(0).GetChild(1).GetComponent<Button>().onClick.AddListener(onClickMapBtn);
+                    optionCommentPanel.transform.GetChild(0).GetChild(2).GetComponent<Button>().onClick.AddListener(onClickDeleteBtn);
                 }
 
                 RectTransform _groupRect = ScrollViewGameObject.transform.GetComponent<RectTransform>();
@@ -96,17 +102,26 @@ public class ViewCommentBehaviour : MonoBehaviour
         }
     }
 
-    private void onClickMapBtn() {
+    
+
+    public void onClickMapBtn() {
+        
         int numN = Convert.ToInt32(EventSystem.current.currentSelectedGameObject.name);
         
         StaticGoogleMap.ApplyMapTexture(mapImage, float.Parse(optionCommentList.data[numN].latitude), float.Parse(optionCommentList.data[numN].latitude));
     }
 
-    private IEnumerator DeleteOptionCommentCoroutine()
+    public void onClickDeleteBtn() {
+        
+        string comment = EventSystem.current.currentSelectedGameObject.name;
+        StartCoroutine(DeleteOptionCommentCoroutine(comment));
+    }
+
+    private IEnumerator DeleteOptionCommentCoroutine(string comment)
     {
         //string userID = _userInfo.UserId;
 
-        string comment = EventSystem.current.currentSelectedGameObject.name;
+        //string comment = EventSystem.current.currentSelectedGameObject.name;
 
         WWWForm deleteCommentForm = new WWWForm();
         deleteCommentForm.AddField("comment", comment);
@@ -119,7 +134,9 @@ public class ViewCommentBehaviour : MonoBehaviour
                 Debug.Log(www.error);
             else
             {
+
                 Debug.Log("delete");
+                ShowToastOnUiThread(comment);
 
             }
         }
@@ -127,8 +144,33 @@ public class ViewCommentBehaviour : MonoBehaviour
         int numN = Convert.ToInt32(EventSystem.current.currentSelectedGameObject.name);
 
         Destroy(GameObject.Find("comment" + EventSystem.current.currentSelectedGameObject.name));
+
         //StartCoroutine(GetOptionCommentCoroutine());
         // 지도 없애기
 
+    }
+
+    void ShowToastOnUiThread(string toastString)
+    {
+        Debug.Log("Android Toast message: " + toastString);
+        if (Application.platform != RuntimePlatform.Android)
+            return;
+
+        AndroidJavaClass UnityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+
+        _currentActivity = UnityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+        this._toastString = toastString;
+
+        _currentActivity.Call("runOnUiThread", new AndroidJavaRunnable(ShowToast));
+    }
+
+    void ShowToast()
+    {
+        Debug.Log("Running on UI thread");
+        AndroidJavaObject context = _currentActivity.Call<AndroidJavaObject>("getApplicationContext");
+        AndroidJavaClass Toast = new AndroidJavaClass("android.widget.Toast");
+        AndroidJavaObject javaString = new AndroidJavaObject("java.lang.String", _toastString);
+        AndroidJavaObject toast = Toast.CallStatic<AndroidJavaObject>("makeText", context, javaString, Toast.GetStatic<int>("LENGTH_SHORT"));
+        toast.Call("show");
     }
 }
