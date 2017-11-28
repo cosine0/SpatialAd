@@ -99,7 +99,7 @@ public class MainBehaviour : MonoBehaviour
 
         // scene에 있는 AR 카메라 가져오기
         _clientInfo.MainCamera = GameObject.FindGameObjectWithTag("MainCamera");
-        
+
         // GPS 좌표 정보 갱신용 코루틴 시작
         StartCoroutine(GetGps(Constants.GpsMeasureIntervalInSecond));
 
@@ -128,11 +128,11 @@ public class MainBehaviour : MonoBehaviour
                     arObject.Update();
             }
         }
-        
+
         if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
-            
+
             switch (touch.phase)
             {
                 case TouchPhase.Began:
@@ -331,6 +331,29 @@ public class MainBehaviour : MonoBehaviour
         }
     }
 
+    private Vector3 _lastUserPosition = new Vector3(0, 0, 0);
+    void MoveObjectAccordingToGps()
+    {
+        Vector3 currentUserPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
+        Vector3 moveAmount = _lastUserPosition - currentUserPosition;
+
+        foreach (var arObject in _arObjects.Values)
+        {
+            var arPlane = (ArPlane) arObject;
+            arPlane.GameObj.transform.Translate(moveAmount);
+            arPlane.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
+            arPlane.CommentCanvas.GameObj.transform.Translate(moveAmount);
+        }
+
+        foreach (var ar3dObject in _ar3dObjects.Values)
+        {
+            ar3dObject.GameObj.transform.Translate(moveAmount);
+            ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
+        }
+
+        _lastUserPosition = currentUserPosition;
+    }
+
     /// <summary>
     /// 일정 시간마다 서버에 사용자의 GPS정보를 HTTP request로 보내서 현재 위치 주변에 있는 Plane List를 받아 온다.
     /// 그 리스트를 이용해 <see cref="_arObjects"/>를 업데이트한다.
@@ -344,8 +367,9 @@ public class MainBehaviour : MonoBehaviour
 
         while (true)
         {
-            
-            if (_clientInfo.InsideOption) {
+
+            if (_clientInfo.InsideOption)
+            {
                 _clientInfo.OriginalValuesAreSet = false;
                 foreach (var arObject in _arObjects.Values)
                     arObject.Destroy();
