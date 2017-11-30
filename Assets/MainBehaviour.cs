@@ -29,6 +29,7 @@ public class Json3dData
     public int object_no;
     public string typeName;
     public float ad_userid;
+    public string content;
     public float latitude;
     public float longitude;
     public float altitude;
@@ -40,7 +41,6 @@ public class JsonPointData
 {
     public int pointReward;
     public bool clickLogFlag;
-
 }
 
 [System.Serializable]
@@ -53,6 +53,20 @@ public class JsonPlaneDataArray
 public class Json3dDataArray
 {
     public Json3dData[] data;
+}
+
+public class DT : Vuforia.PositionalDeviceTracker
+{
+    public override bool Start()
+    {
+        
+        throw new NotImplementedException();
+    }
+
+    public override void Stop()
+    {
+        throw new NotImplementedException();
+    }
 }
 
 /// <summary>
@@ -87,6 +101,7 @@ public class MainBehaviour : MonoBehaviour
 
     public GameObject inAppCanvas;
     public GameObject commentViewCanvas;
+    public GameObject arCommentInputCanvas;
     public GameObject object3DMenu;
 
     JsonPointData _pointData;
@@ -113,12 +128,17 @@ public class MainBehaviour : MonoBehaviour
         // 주변 오브젝트 목록 주기적 업데이트를 위한 코루틴 시작
         StartCoroutine(GetArObjectList(5.0f));
         StartCoroutine(Get3dArObjectList(5.0f));
+
+        //////////////// tracker test code///////////////////
+        //Vuforia.MixedRealityController.Instance.SetMode(Vuforia.MixedRealityController.Mode.HANDHELD_AR_DEVICETRACKER);
+        //Debug.Log((Vuforia.MixedRealityController.Instance.SetMode(Vuforia.MixedRealityController.Mode.HANDHELD_AR_DEVICETRACKER) ? "TRUE" : "FALSE"));
+        ////////////////////////////////////
     }
 
     private void Update()
     {
         //UpdateCameraBearing();
-        UpdateCameraPosition();
+        //UpdateCameraPosition();
 
         if (_arObjects.Count != 0)
         {
@@ -208,6 +228,7 @@ public class MainBehaviour : MonoBehaviour
             _clientInfo.StartingAltitude
             + "\nGPS: " + _clientInfo.CurrentLatitude + ", " + _clientInfo.CurrentLongitude + ", " +
             _clientInfo.CurrentAltitude
+            + "\nHorizontal accuracy: " + Input.location.lastData.horizontalAccuracy
             + "\ncamera position: " + _clientInfo.MainCamera.transform.position
             + "\ncamera angle: " + _clientInfo.MainCamera.transform.eulerAngles
             + "\ncompass: " + Input.compass.trueHeading
@@ -313,7 +334,7 @@ public class MainBehaviour : MonoBehaviour
             _clientInfo.CurrentLatitude = Input.location.lastData.latitude;
             _clientInfo.CurrentLongitude = Input.location.lastData.longitude;
             _clientInfo.CurrentAltitude = Input.location.lastData.altitude;
-
+            
             // 초기 위치 정보 저장
             if (!_clientInfo.OriginalValuesAreSet)
             {
@@ -377,9 +398,9 @@ public class MainBehaviour : MonoBehaviour
 
 
                 //테스트용 GPS 
-                latitude = "37.450700";
-                longitude = "126.657100";
-                altitude = "53.000000";
+                //latitude = "37.450700";
+                //longitude = "126.657100";
+                //altitude = "53.000000";
                 //_clientInfo.StartingLatitude = 37.450700f;
                 //_clientInfo.StartingLongitude = 126.657100f;
                 //_clientInfo.StartingAltitude = 53.000000f;
@@ -476,10 +497,11 @@ public class MainBehaviour : MonoBehaviour
         if (Application.platform == RuntimePlatform.Android)
             if (!_clientInfo.OriginalValuesAreSet)
                 yield return new WaitUntil(() => _clientInfo.OriginalValuesAreSet);
+                
+        yield return new WaitUntil(() => _clientInfo.Object3dViewOption);
 
         while (true)
         {
-
             if (_clientInfo.InsideOption)
             {
                 _clientInfo.OriginalValuesAreSet = false;
@@ -575,17 +597,25 @@ public class MainBehaviour : MonoBehaviour
                                 if (_ar3dObjects.Keys.Contains(json3dArObject.object_no))
                                     continue;
 
-                                // 새로운 ArObject 생성
-                                Ad3dInfo tmpAdInfo = new Ad3dInfo
+                                if (json3dArObject.typeName.Equals("comment"))
                                 {
-                                    ObjectNumber = json3dArObject.object_no,
-                                    typeName = json3dArObject.typeName,
-                                    GpsInfo = new Vector3(json3dArObject.latitude, json3dArObject.longitude,
-                                    json3dArObject.altitude),
-                                    Bearing = json3dArObject.bearing,
-                                    TextAlternateToTexture = "",
-                                };
-                                _ar3dObjects[json3dArObject.object_no] = new Ar3dPlane(tmpAdInfo, _clientInfo);
+                                    // 3d ArComment
+                                    _ar3dObjects[json3dArObject.object_no] = new ArComment(json3dArObject, _clientInfo);
+                                }
+                                else
+                                {
+                                    // 새로운 ArObject 생성
+                                    Ad3dInfo tmpAdInfo = new Ad3dInfo
+                                    {
+                                        ObjectNumber = json3dArObject.object_no,
+                                        typeName = json3dArObject.typeName,
+                                        GpsInfo = new Vector3(json3dArObject.latitude, json3dArObject.longitude,
+                                        json3dArObject.altitude),
+                                        Bearing = json3dArObject.bearing,
+                                        TextAlternateToTexture = "",
+                                    };
+                                    _ar3dObjects[json3dArObject.object_no] = new Ar3dPlane(tmpAdInfo, _clientInfo);
+                                }
                             }
                         }
                     }
@@ -749,6 +779,19 @@ public class MainBehaviour : MonoBehaviour
         SceneManager.LoadScene("Option");
     }
 
+    private void GetSatellite()
+    {
+        if (Application.platform != RuntimePlatform.Android)
+            return;
+
+        AndroidJavaClass location = new AndroidJavaClass("android.location");
+        AndroidJavaObject _locationManager = location.GetStatic<AndroidJavaObject>("locationManager");
+        AndroidJavaObject _getGpsStatus = _locationManager.CallStatic<AndroidJavaObject>("getGpsStatus", null);
+        AndroidJavaObject _getSatellite = _getGpsStatus.CallStatic<AndroidJavaObject>("getSatellite");
+        
+        //Location.CallStatic<AndroidJavaObject>("getSatellites").CallStatic;
+    }
+
     void ShowToastOnUiThread(string toastString)
     {
         Debug.Log("Android Toast message: " + toastString);
@@ -794,6 +837,11 @@ public class MainBehaviour : MonoBehaviour
                 _userInfo.Point = _pointData.pointReward;
             }
         }
+    }
+
+    public void OnClickArCommentButton()
+    {
+        arCommentInputCanvas.GetComponent<ArCommentInputBehaviour>().ShowCommentInputCanvas();
     }
 
     public void onClickHorseBtn()
@@ -914,6 +962,6 @@ public class MainBehaviour : MonoBehaviour
 
     public void TestButton()
     {
-        //_clientInfo.LodingCanvas.GetComponent<LoadingCanvasBehaviour>().ShowLodingCanvas();
+        Debug.Log(EventSystem.current.currentSelectedGameObject.name);
     }
 }
