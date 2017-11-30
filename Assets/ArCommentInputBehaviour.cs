@@ -41,7 +41,6 @@ public class ArCommentInputBehaviour : MonoBehaviour {
             _comment.text = _comment.text.Remove(40);
 
         StartCoroutine(CommitArComment());
-        HideCommentInputCanvas();
     }
 
     private IEnumerator CommitArComment()
@@ -68,6 +67,7 @@ public class ArCommentInputBehaviour : MonoBehaviour {
             }
         }
         _comment.text = "";
+        HideCommentInputCanvas();
     }
 
 }

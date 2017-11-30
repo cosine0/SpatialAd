@@ -779,17 +779,24 @@ public class MainBehaviour : MonoBehaviour
         SceneManager.LoadScene("Option");
     }
 
-    private void GetSatellite()
+    public void GetSatellite()
     {
         if (Application.platform != RuntimePlatform.Android)
             return;
 
+        int _usedSatellite = 0;
+
         AndroidJavaClass location = new AndroidJavaClass("android.location");
-        AndroidJavaObject _locationManager = location.GetStatic<AndroidJavaObject>("locationManager");
-        AndroidJavaObject _getGpsStatus = _locationManager.CallStatic<AndroidJavaObject>("getGpsStatus", null);
-        AndroidJavaObject _getSatellite = _getGpsStatus.CallStatic<AndroidJavaObject>("getSatellite");
+        AndroidJavaObject _GnssStatus = location.Get<AndroidJavaObject>("GnssStatus");
+        int _satelliteCount = _GnssStatus.Call<int>("getSatelliteCount");
         
-        //Location.CallStatic<AndroidJavaObject>("getSatellites").CallStatic;
+        for (int i = 0; i < _satelliteCount; i++)
+        {
+            if (_GnssStatus.Call<bool>("usedInFix", i))
+                _usedSatellite++;
+        }
+
+        Debug.Log("Satellite Count: " + _usedSatellite.ToString());
     }
 
     void ShowToastOnUiThread(string toastString)
