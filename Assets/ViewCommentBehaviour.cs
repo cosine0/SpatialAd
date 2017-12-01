@@ -7,14 +7,15 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System;
 
-public class ViewObjectBehaviour : MonoBehaviour
+public class ViewCommentBehaviour : MonoBehaviour
 {
     private string opjName;
     private string path;
     public GameObject ScrollViewGameObject;
     private UserInfo _userInfo;
 
-    JsonOptionObjectDataArray optionObjectList;
+    JsonOptionCommentDataArray optionCommentList;
+
     public RawImage mapImage;
 
     // 안드로이드 Toast를 띄울 때 사용되는 임시 객체
@@ -53,7 +54,7 @@ public class ViewObjectBehaviour : MonoBehaviour
         WWWForm checkCommentForm = new WWWForm();
         checkCommentForm.AddField("Input_user", userID);
 
-        using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/user_3d_object.php", checkCommentForm))
+        using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/user_comment.php", checkCommentForm))
         {
             yield return www.SendWebRequest();
 
@@ -62,27 +63,24 @@ public class ViewObjectBehaviour : MonoBehaviour
             else
             {
                 fromServJson = www.downloadHandler.text;
-                optionObjectList = JsonUtility.FromJson<JsonOptionObjectDataArray>(fromServJson);
+                optionCommentList = JsonUtility.FromJson<JsonOptionCommentDataArray>(fromServJson);
 
-                for (int i = 0; i < optionObjectList.data.Length; i++)
+                for (int i = 0; i < optionCommentList.data.Length; i++)
                 {
-                    GameObject optionObjectPanel = Instantiate(Resources.Load(path) as GameObject) as GameObject;
-                    optionObjectPanel.transform.SetParent(ScrollViewGameObject.transform, false);
-                    optionObjectPanel.transform.GetChild(0).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = optionObjectList.data[i].dateTime;
-                    if(optionObjectList.data[i].typeName=="comment")
-                        optionObjectPanel.transform.GetChild(1).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = optionObjectList.data[i].content;
-                    else
-                        optionObjectPanel.transform.GetChild(1).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = "3D Object Type: " + optionObjectList.data[i].typeName;
-                    optionObjectPanel.transform.name = "object" + i.ToString();
-                    optionObjectPanel.transform.GetChild(0).GetChild(1).name = i.ToString();
-                    optionObjectPanel.transform.GetChild(0).GetChild(2).name = i.ToString();
-                    optionObjectPanel.transform.GetChild(0).GetChild(1).GetComponent<Button>().onClick.AddListener(onClickMapBtn);
-                    optionObjectPanel.transform.GetChild(0).GetChild(2).GetComponent<Button>().onClick.AddListener(onClickDeleteBtn);
+                    GameObject optionCommentPanel = Instantiate(Resources.Load(path) as GameObject) as GameObject;
+                    optionCommentPanel.transform.SetParent(ScrollViewGameObject.transform, false);
+                    optionCommentPanel.transform.GetChild(0).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = optionCommentList.data[i].dateTime;
+                    optionCommentPanel.transform.GetChild(1).GetChild(0).GetComponent<UnityEngine.UI.Text>().text = optionCommentList.data[i].comment;
+                    optionCommentPanel.transform.name = "comment" + i.ToString();
+                    optionCommentPanel.transform.GetChild(0).GetChild(1).name = i.ToString();
+                    optionCommentPanel.transform.GetChild(0).GetChild(2).name = i.ToString();
+                    optionCommentPanel.transform.GetChild(0).GetChild(1).GetComponent<Button>().onClick.AddListener(onClickMapBtn);
+                    optionCommentPanel.transform.GetChild(0).GetChild(2).GetComponent<Button>().onClick.AddListener(onClickDeleteBtn);
                 }
 
                 RectTransform _groupRect = ScrollViewGameObject.transform.GetComponent<RectTransform>();
 
-                _groupRect.sizeDelta = new Vector2(1000, optionObjectList.data.Length * 240);
+                _groupRect.sizeDelta = new Vector2(1000, optionCommentList.data.Length * 240);
 
 
 
@@ -112,21 +110,21 @@ public class ViewObjectBehaviour : MonoBehaviour
     {
         int numN = Convert.ToInt32(EventSystem.current.currentSelectedGameObject.name);
         Debug.Log(numN);
-        StaticGoogleMap.ApplyMapTexture(mapImage, float.Parse(optionObjectList.data[numN].latitude), float.Parse(optionObjectList.data[numN].longitude));
-        Debug.Log(float.Parse(optionObjectList.data[numN].latitude) + " " + float.Parse(optionObjectList.data[numN].longitude));
+        StaticGoogleMap.ApplyMapTexture(mapImage, float.Parse(optionCommentList.data[numN].latitude), float.Parse(optionCommentList.data[numN].longitude));
+        Debug.Log(float.Parse(optionCommentList.data[numN].latitude) + " " + float.Parse(optionCommentList.data[numN].longitude));
     }
 
     public void onClickDeleteBtn()
     {
         //ShowToastOnUiThread("yo");
         int numN = Convert.ToInt32(EventSystem.current.currentSelectedGameObject.name);
-        string objectN = optionObjectList.data[numN].object_no.ToString();
-        Debug.Log("number:" + objectN);
+        string comment = optionCommentList.data[numN].comm_no;
+        Debug.Log("number:" + comment);
 
-        StartCoroutine(DeleteOptionObjectCoroutine(objectN));
+        StartCoroutine(DeleteOptionCommentCoroutine(comment));
     }
 
-    private IEnumerator DeleteOptionObjectCoroutine(string objectN)
+    private IEnumerator DeleteOptionCommentCoroutine(string comment)
     {
         //string userID = _userInfo.UserId;
 
@@ -134,9 +132,9 @@ public class ViewObjectBehaviour : MonoBehaviour
 
 
         WWWForm deleteCommentForm = new WWWForm();
-        deleteCommentForm.AddField("objectN", objectN);
+        deleteCommentForm.AddField("comment", comment);
 
-        using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/delete_3d_object.php", deleteCommentForm))
+        using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/delete_comment.php", deleteCommentForm))
         {
             yield return www.SendWebRequest();
 
@@ -153,7 +151,7 @@ public class ViewObjectBehaviour : MonoBehaviour
 
         //int numN = Convert.ToInt32(EventSystem.current.currentSelectedGameObject.name);
 
-        Destroy(GameObject.Find("object" + EventSystem.current.currentSelectedGameObject.name));
+        Destroy(GameObject.Find("comment" + EventSystem.current.currentSelectedGameObject.name));
 
         //StartCoroutine(GetOptionCommentCoroutine());
         // 지도 없애기

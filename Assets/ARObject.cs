@@ -204,7 +204,7 @@ public class ArPlane : ArObject
         // Plane object의 DataContainer에 값 패싱
         GameObj.AddComponent<DataContainer>().BannerUrl = Info.BannerUrl; // URL 정보를 담을 DataContainer Component추가
         GameObj.GetComponent<DataContainer>().AdNum = Info.AdNumber;
-        GameObj.GetComponent<DataContainer>().CreatedCameraPosition = new Vector3(0, 0, 0);  // 현재 카메라 위치는 항상 원점이지만 이 멤버 값은 GPS 값에 따라 바뀐다.
+        GameObj.GetComponent<DataContainer>().CreatedCameraPosition = Vector3.zero;  // 현재 카메라 위치는 항상 원점이지만 이 멤버 값은 GPS 값에 따라 바뀐다.
         GameObj.GetComponent<DataContainer>().ObjectType = ArObjectType.AdPlane;
 
         // GPS 정보를 사용하기 위해 GPS 초기화가 안된 경우 대기.
@@ -466,10 +466,10 @@ public class ArComment : ArObject
         Vector3 unityPosition = GpsCalulator.CoordinateDifference(ClientInfoObj.StartingLatitude, ClientInfoObj.StartingLongitude, ClientInfoObj.StartingAltitude,
             _commentData.latitude, _commentData.longitude, _commentData.altitude);
         unityPosition.y = 0; // 고도 사용 안함.
-
+       
         // Create Object
         GameObj = MonoBehaviour.Instantiate(Resources.Load("Prefabs/ArComment") as GameObject) as GameObject;
-
+        GameObj.AddComponent<DataContainer>().CreatedCameraPosition = Vector3.zero;
         GameObj.transform.position = unityPosition;
         GameObj.transform.eulerAngles = new Vector3(0, _commentData.bearing, 0);
 

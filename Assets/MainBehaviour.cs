@@ -110,12 +110,12 @@ public class MainBehaviour : MonoBehaviour
 
     private void Start()
     {
-        //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
-        //{
-        //    {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}},
-        //    {100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
-        //});
-        _location = UnityLocationProvider.Instance;
+        _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+        {
+            {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}},
+            {100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+        });
+        //_location = UnityLocationProvider.Instance;
 
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
         _clientInfo = GameObject.FindGameObjectWithTag("ClientInfo").GetComponent<ClientInfo>();
@@ -292,11 +292,7 @@ public class MainBehaviour : MonoBehaviour
         // GPS 고도는 무시
         currentUserPosition.y = 0.0f;
 
-        // 카메라를 유니티 상의 현재 사용자 위치로 옮기기
-        //_clientInfo.MainCamera.transform.position = coordinateDifferenceFromStart;
-
         // 물체를 카메라의 이동 반대방향으로 옮기기
-        
         Vector3 moveAmount = _lastUserPosition - currentUserPosition;
 
         foreach (var arObject in _arObjects.Values)
