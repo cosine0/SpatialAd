@@ -204,8 +204,7 @@ public class ArPlane : ArObject
         // Plane object의 DataContainer에 값 패싱
         GameObj.AddComponent<DataContainer>().BannerUrl = Info.BannerUrl; // URL 정보를 담을 DataContainer Component추가
         GameObj.GetComponent<DataContainer>().AdNum = Info.AdNumber;
-        GameObj.GetComponent<DataContainer>().CreatedCameraPosition =
-            new Vector3(ClientInfoObj.MainCamera.transform.position.x, ClientInfoObj.MainCamera.transform.position.y, ClientInfoObj.MainCamera.transform.position.z);
+        GameObj.GetComponent<DataContainer>().CreatedCameraPosition = new Vector3(0, 0, 0);  // 현재 카메라 위치는 항상 원점이지만 이 멤버 값은 GPS 값에 따라 바뀐다.
         GameObj.GetComponent<DataContainer>().ObjectType = ArObjectType.AdPlane;
 
         // GPS 정보를 사용하기 위해 GPS 초기화가 안된 경우 대기.

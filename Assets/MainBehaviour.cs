@@ -104,17 +104,26 @@ public class MainBehaviour : MonoBehaviour
     public GameObject arCommentInputCanvas;
     public GameObject object3DMenu;
 
+    private LocationProvider _location;
+
     JsonPointData _pointData;
 
     private void Start()
     {
+        //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+        //{
+        //    {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}},
+        //    {100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+        //});
+        _location = UnityLocationProvider.Instance;
+
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
         _clientInfo = GameObject.FindGameObjectWithTag("ClientInfo").GetComponent<ClientInfo>();
         _userInfo = GameObject.FindGameObjectWithTag("UserInfo").GetComponent<UserInfo>();
 
         // scene에 있는 AR 카메라 가져오기
         _clientInfo.MainCamera = GameObject.FindGameObjectWithTag("MainCamera");
-        
+
         // GPS 좌표 정보 갱신용 코루틴 시작
         StartCoroutine(GetGps(Constants.GpsMeasureIntervalInSecond));
 
@@ -138,7 +147,7 @@ public class MainBehaviour : MonoBehaviour
     private void Update()
     {
         //UpdateCameraBearing();
-        //UpdateCameraPosition();
+        UpdateCameraPosition();
 
         if (_arObjects.Count != 0)
         {
@@ -148,11 +157,11 @@ public class MainBehaviour : MonoBehaviour
                     arObject.Update();
             }
         }
-        
+
         if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
-            
+
             switch (touch.phase)
             {
                 case TouchPhase.Began:
@@ -203,9 +212,11 @@ public class MainBehaviour : MonoBehaviour
                                 {
                                     Debug.Log("Comment Canvas Touch!");
 
-                                    GameObject _canvasObject = _results[_results.Count - 1].gameObject.transform.parent.gameObject;
+                                    GameObject _canvasObject = _results[_results.Count - 1].gameObject.transform.parent
+                                        .gameObject;
 
-                                    commentViewCanvas.GetComponent<CommentViewCanvasBehaviour>().adNumber = _canvasObject.GetComponent<DataContainer>().AdNum;
+                                    commentViewCanvas.GetComponent<CommentViewCanvasBehaviour>().adNumber =
+                                        _canvasObject.GetComponent<DataContainer>().AdNum;
                                     commentViewCanvas.GetComponent<CommentViewCanvasBehaviour>().OnInit();
                                 }
                             }
@@ -254,6 +265,8 @@ public class MainBehaviour : MonoBehaviour
         }
     }
 
+    private Vector3 _lastUserPosition = new Vector3(0, 0, 0);
+
     /// <summary>
     /// <see cref="_clientInfo"/>의 GPS값을 카메라 위치에 적용한다.
     /// </summary>
@@ -272,15 +285,35 @@ public class MainBehaviour : MonoBehaviour
 
         // 앱을 켠 순간의 GPS 좌표 (_clientInfo.StartingXXX)에 대응하는 유니티 좌표와
         // 현재 GPS 좌표 (_clientInfo.CurrentXXX)에 대응하는 유니티 좌표의 차를 구한다.
-        Vector3 coordinateDifferenceFromStart = GpsCalulator.CoordinateDifference(
-            _clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude,
-            _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, _clientInfo.StartingAltitude);
+        Vector3 currentUserPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude,
+            _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude,
+            _clientInfo.CurrentLongitude, 0);
 
         // GPS 고도는 무시
-        coordinateDifferenceFromStart.y = 0.0f;
+        currentUserPosition.y = 0.0f;
 
         // 카메라를 유니티 상의 현재 사용자 위치로 옮기기
-        _clientInfo.MainCamera.transform.position = coordinateDifferenceFromStart;
+        //_clientInfo.MainCamera.transform.position = coordinateDifferenceFromStart;
+
+        // 물체를 카메라의 이동 반대방향으로 옮기기
+        
+        Vector3 moveAmount = _lastUserPosition - currentUserPosition;
+
+        foreach (var arObject in _arObjects.Values)
+        {
+            var arPlane = (ArPlane)arObject;
+            arPlane.GameObj.transform.Translate(moveAmount, Space.World);
+            arPlane.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
+            arPlane.CommentCanvas.GameObj.transform.Translate(moveAmount, Space.World);
+        }
+
+        foreach (var ar3dObject in _ar3dObjects.Values)
+        {
+            ar3dObject.GameObj.transform.Translate(moveAmount, Space.World);
+            ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
+        }
+
+        _lastUserPosition = currentUserPosition;
     }
 
     /// <summary>
@@ -292,7 +325,7 @@ public class MainBehaviour : MonoBehaviour
         while (true)
         {
             // 위치 서비스가 켜져 있는지 체크
-            if (!Input.location.isEnabledByUser)
+            if (!_location.IsEnabledByUser())
             {
                 _clientInfo.LodingCanvas.GetComponent<LoadingCanvasBehaviour>().HideLodingCanvas();
                 yield break;
@@ -302,12 +335,11 @@ public class MainBehaviour : MonoBehaviour
             if (!_clientInfo.OriginalValuesAreSet)
             {
                 // 위치를 요청하기 전 서비스 시작
-                Input.location.Start(1.0f, 0.1f);
-                Input.compass.enabled = true;
+                _location.Start(1.0f, 0.1f);
 
                 // 서비스 초기화 대기
                 int maxWait = 20;
-                while (Input.location.status == LocationServiceStatus.Initializing && maxWait > 0)
+                while (_location.Status() == LocationServiceStatus.Initializing && maxWait > 0)
                 {
                     yield return new WaitForSeconds(1);
                     maxWait--;
@@ -321,7 +353,7 @@ public class MainBehaviour : MonoBehaviour
                 }
 
                 // Connection 실패
-                if (Input.location.status == LocationServiceStatus.Failed)
+                if (_location.Status() == LocationServiceStatus.Failed)
                 {
                     Debug.Log("Unable to determine device location");
                     yield break;
@@ -331,9 +363,10 @@ public class MainBehaviour : MonoBehaviour
             _clientInfo.LastGpsMeasureTime = Time.time;
 
             // DontDestroyOnLoad 오브젝트인 _clientInfo의 현재 위치 업데이트
-            _clientInfo.CurrentLatitude = Input.location.lastData.latitude;
-            _clientInfo.CurrentLongitude = Input.location.lastData.longitude;
-            _clientInfo.CurrentAltitude = Input.location.lastData.altitude;
+            _clientInfo.CurrentLatitude = _location.GetLatitude();
+            _clientInfo.CurrentLongitude = _location.GetLongitude();
+            _clientInfo.CurrentAltitude = _location.GetAltitude();
+
             
             // 초기 위치 정보 저장
             if (!_clientInfo.OriginalValuesAreSet)
@@ -341,7 +374,7 @@ public class MainBehaviour : MonoBehaviour
                 _clientInfo.StartingLatitude = _clientInfo.CurrentLatitude;
                 _clientInfo.StartingLongitude = _clientInfo.CurrentLongitude;
                 _clientInfo.StartingAltitude = _clientInfo.CurrentAltitude;
-                _clientInfo.CorrectedBearingOffset = Input.compass.trueHeading;
+                _clientInfo.CorrectedBearingOffset = _location.GetTrueHeading();
 
                 _clientInfo.OriginalValuesAreSet = true;
                 _clientInfo.LodingCanvas.GetComponent<LoadingCanvasBehaviour>().HideLodingCanvas();
@@ -365,8 +398,8 @@ public class MainBehaviour : MonoBehaviour
 
         while (true)
         {
-            
-            if (_clientInfo.InsideOption) {
+            if (_clientInfo.InsideOption)
+            {
                 _clientInfo.OriginalValuesAreSet = false;
                 foreach (var arObject in _arObjects.Values)
                     arObject.Destroy();
@@ -374,7 +407,6 @@ public class MainBehaviour : MonoBehaviour
             }
             else
             {
-
                 string latitude = _clientInfo.CurrentLatitude.ToString();
                 string longitude = _clientInfo.CurrentLongitude.ToString();
                 string altitude = _clientInfo.CurrentAltitude.ToString();
@@ -511,7 +543,6 @@ public class MainBehaviour : MonoBehaviour
             }
             else
             {
-
                 string latitude = _clientInfo.CurrentLatitude.ToString();
                 string longitude = _clientInfo.CurrentLongitude.ToString();
                 string altitude = _clientInfo.CurrentAltitude.ToString();
@@ -638,7 +669,7 @@ public class MainBehaviour : MonoBehaviour
             // 자이로 센서를 바탕으로 기기가 아래(75~90도)나 위(270~285도)를 보고 있을 때는 카운트 하지 않음
             if ((0f <= gyroAngles.x && gyroAngles.x < 75f) || (285f < gyroAngles.x && gyroAngles.x <= 360f))
             {
-                var difference = Input.compass.trueHeading - gyroAngles.y;
+                var difference = _location.GetTrueHeading() - gyroAngles.y;
 
                 // 버퍼에 각 차이 저장
                 _clientInfo.BearingDifferenceBuffer[_clientInfo.BearingDifferenceIndex] = difference;
@@ -763,7 +794,6 @@ public class MainBehaviour : MonoBehaviour
                     }
 
                     StartCoroutine(GetPointCoroutine());
-
                 }
                 else ShowToastOnUiThread("You already clicked!");
             }
@@ -901,7 +931,9 @@ public class MainBehaviour : MonoBehaviour
 
     public void onClickTreeBtn()
     {
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude,
+            _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude,
+            _clientInfo.CurrentLongitude, 0);
         //Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, 37.31263f, 126.8481f, 0);
         createObject("tree", unityPosition);
         //createObject("horse", 40, -1, 0);
