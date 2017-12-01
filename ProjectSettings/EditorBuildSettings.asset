@@ -14,12 +14,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Option.unity
     guid: 477d1a23f03e6184db39b5d8b0724abe
-  - enabled: 1
-    path: Assets/MapOption.unity
-    guid: d3b675b7fc576764794e9062b43f56f4
   - enabled: 0
-    path: Assets/MapOption2.unity
-    guid: 441b7ef29a424cf449dc8f037ab2bf22
+    path: Assets/option 1.unity
+    guid: a297223abf57a1648aac42f4de946f3e
+  - enabled: 1
+    path: Assets/mapOption.unity
+    guid: d3b675b7fc576764794e9062b43f56f4
   - enabled: 1
     path: Assets/ObjectOption.unity
     guid: 4c6842c158648ad4f95f16b769df88ce
