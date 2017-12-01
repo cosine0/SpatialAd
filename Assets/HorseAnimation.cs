@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class horseAnimation : MonoBehaviour
+public class HorseAnimation : MonoBehaviour
 {
     //public GameObject obj;
     //public Animator horseAnim;
@@ -30,7 +30,7 @@ public class horseAnimation : MonoBehaviour
     public void onClickBtn()
     {
         //createObject("horse", _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
-        createObject("butterfly", 70, 2, 0);
+        createObject("horse", 70, 2, 0);
     }
 
 

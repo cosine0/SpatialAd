@@ -7,10 +7,16 @@ EditorBuildSettings:
   m_Scenes:
   - enabled: 1
     path: Assets/Login.unity
-    guid: 3c51cf1ad65e59349bb420f5a5dd908d
+    guid: 4c6475952d517864d838ca8f4bb4d7eb
   - enabled: 1
     path: Assets/InApp.unity
     guid: 091d24bbd0c857a498e21fc381c90895
   - enabled: 1
     path: Assets/Option.unity
     guid: 477d1a23f03e6184db39b5d8b0724abe
+  - enabled: 1
+    path: Assets/MapOption.unity
+    guid: d3b675b7fc576764794e9062b43f56f4
+  - enabled: 1
+    path: Assets/ObjectOption.unity
+    guid: 4c6842c158648ad4f95f16b769df88ce

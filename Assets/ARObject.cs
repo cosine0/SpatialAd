@@ -75,6 +75,43 @@ public class JsonCommentDataArray
 
 }
 
+[System.Serializable]
+public class JsonOptionCommentData
+{
+    public string comm_no;
+    public string comment;
+    public string dateTime;
+    public string latitude;
+    public string longitude;
+    public string altitude;
+}
+
+[System.Serializable]
+public class JsonOptionCommentDataArray
+{
+    public JsonOptionCommentData[] data;
+
+}
+
+[System.Serializable]
+public class JsonOptionObjectData
+{
+    public int object_no;
+    public string typeName;
+    public string latitude;
+    public string longitude;
+    public string altitude;
+    public string dateTime;
+    public string content;
+}
+
+[System.Serializable]
+public class JsonOptionObjectDataArray
+{
+    public JsonOptionObjectData[] data;
+
+}
+
 /// <summary>
 /// AR 공간상에 나타낼 수 있는 오브젝트.
 /// </summary>
