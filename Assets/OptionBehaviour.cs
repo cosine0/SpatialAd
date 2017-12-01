@@ -21,7 +21,7 @@ public class OptionBehaviour : MonoBehaviour
 
     private JsonPointData _pointData;
 
-    public GameObject viewPanel;
+    //public GameObject viewPanel;
     void Start()
     {
         // DontDestroyOnLoad 객체 가져오기
