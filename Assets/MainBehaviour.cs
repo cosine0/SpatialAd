@@ -40,7 +40,6 @@ public class JsonPointData
 {
     public int pointReward;
     public bool clickLogFlag;
-
 }
 
 [System.Serializable]
@@ -89,10 +88,19 @@ public class MainBehaviour : MonoBehaviour
     public GameObject commentViewCanvas;
     public GameObject object3DMenu;
 
+    private LocationProvider _location;
+
     JsonPointData _pointData;
 
     private void Start()
     {
+        //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+        //{
+        //    {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}},
+        //    {100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+        //});
+        _location = UnityLocationProvider.Instance;
+
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
         _clientInfo = GameObject.FindGameObjectWithTag("ClientInfo").GetComponent<ClientInfo>();
         _userInfo = GameObject.FindGameObjectWithTag("UserInfo").GetComponent<UserInfo>();
@@ -183,9 +191,11 @@ public class MainBehaviour : MonoBehaviour
                                 {
                                     Debug.Log("Comment Canvas Touch!");
 
-                                    GameObject _canvasObject = _results[_results.Count - 1].gameObject.transform.parent.gameObject;
+                                    GameObject _canvasObject = _results[_results.Count - 1].gameObject.transform.parent
+                                        .gameObject;
 
-                                    commentViewCanvas.GetComponent<CommentViewCanvasBehaviour>().adNumber = _canvasObject.GetComponent<DataContainer>().AdNum;
+                                    commentViewCanvas.GetComponent<CommentViewCanvasBehaviour>().adNumber =
+                                        _canvasObject.GetComponent<DataContainer>().AdNum;
                                     commentViewCanvas.GetComponent<CommentViewCanvasBehaviour>().OnInit();
                                 }
                             }
@@ -210,8 +220,9 @@ public class MainBehaviour : MonoBehaviour
             _clientInfo.CurrentAltitude
             + "\ncamera position: " + _clientInfo.MainCamera.transform.position
             + "\ncamera angle: " + _clientInfo.MainCamera.transform.eulerAngles
-            + "\ncompass: " + Input.compass.trueHeading
-            + "\nCurrent (compass-gyro): " + ((Input.compass.trueHeading - _clientInfo.MainCamera.transform.eulerAngles.y) % 360f + 360f) % 360f
+            + "\ncompass: " + _location.GetTrueHeading()
+            + "\nCurrent (compass-gyro): " +
+            ((_location.GetTrueHeading() - _clientInfo.MainCamera.transform.eulerAngles.y) % 360f + 360f) % 360f
             + "\nAverage (compass-gyro): " + (_clientInfo.CorrectedBearingOffset % 360f + 360f) % 360f
             + "\nCorrected Bearing: " + (_clientInfo.CurrentBearing % 360f + 360f) % 360f
             + "\nObject Count: " + _arObjects.Count
@@ -233,6 +244,8 @@ public class MainBehaviour : MonoBehaviour
         }
     }
 
+    private Vector3 _lastUserPosition = new Vector3(0, 0, 0);
+
     /// <summary>
     /// <see cref="_clientInfo"/>의 GPS값을 카메라 위치에 적용한다.
     /// </summary>
@@ -251,15 +264,35 @@ public class MainBehaviour : MonoBehaviour
 
         // 앱을 켠 순간의 GPS 좌표 (_clientInfo.StartingXXX)에 대응하는 유니티 좌표와
         // 현재 GPS 좌표 (_clientInfo.CurrentXXX)에 대응하는 유니티 좌표의 차를 구한다.
-        Vector3 coordinateDifferenceFromStart = GpsCalulator.CoordinateDifference(
-            _clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude,
-            _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, _clientInfo.StartingAltitude);
+        Vector3 currentUserPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude,
+            _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude,
+            _clientInfo.CurrentLongitude, 0);
 
         // GPS 고도는 무시
-        coordinateDifferenceFromStart.y = 0.0f;
+        currentUserPosition.y = 0.0f;
 
         // 카메라를 유니티 상의 현재 사용자 위치로 옮기기
-        _clientInfo.MainCamera.transform.position = coordinateDifferenceFromStart;
+        //_clientInfo.MainCamera.transform.position = coordinateDifferenceFromStart;
+
+        // 물체를 카메라의 이동 반대방향으로 옮기기
+        
+        Vector3 moveAmount = _lastUserPosition - currentUserPosition;
+
+        foreach (var arObject in _arObjects.Values)
+        {
+            var arPlane = (ArPlane)arObject;
+            arPlane.GameObj.transform.Translate(moveAmount, Space.World);
+            arPlane.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
+            arPlane.CommentCanvas.GameObj.transform.Translate(moveAmount, Space.World);
+        }
+
+        foreach (var ar3dObject in _ar3dObjects.Values)
+        {
+            ar3dObject.GameObj.transform.Translate(moveAmount, Space.World);
+            ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
+        }
+
+        _lastUserPosition = currentUserPosition;
     }
 
     /// <summary>
@@ -271,7 +304,7 @@ public class MainBehaviour : MonoBehaviour
         while (true)
         {
             // 위치 서비스가 켜져 있는지 체크
-            if (!Input.location.isEnabledByUser)
+            if (!_location.IsEnabledByUser())
             {
                 _clientInfo.LodingCanvas.GetComponent<LoadingCanvasBehaviour>().HideLodingCanvas();
                 yield break;
@@ -281,12 +314,11 @@ public class MainBehaviour : MonoBehaviour
             if (!_clientInfo.OriginalValuesAreSet)
             {
                 // 위치를 요청하기 전 서비스 시작
-                Input.location.Start(1.0f, 0.1f);
-                Input.compass.enabled = true;
+                _location.Start(1.0f, 0.1f);
 
                 // 서비스 초기화 대기
                 int maxWait = 20;
-                while (Input.location.status == LocationServiceStatus.Initializing && maxWait > 0)
+                while (_location.Status() == LocationServiceStatus.Initializing && maxWait > 0)
                 {
                     yield return new WaitForSeconds(1);
                     maxWait--;
@@ -300,7 +332,7 @@ public class MainBehaviour : MonoBehaviour
                 }
 
                 // Connection 실패
-                if (Input.location.status == LocationServiceStatus.Failed)
+                if (_location.Status() == LocationServiceStatus.Failed)
                 {
                     Debug.Log("Unable to determine device location");
                     yield break;
@@ -310,17 +342,18 @@ public class MainBehaviour : MonoBehaviour
             _clientInfo.LastGpsMeasureTime = Time.time;
 
             // DontDestroyOnLoad 오브젝트인 _clientInfo의 현재 위치 업데이트
-            _clientInfo.CurrentLatitude = Input.location.lastData.latitude;
-            _clientInfo.CurrentLongitude = Input.location.lastData.longitude;
-            _clientInfo.CurrentAltitude = Input.location.lastData.altitude;
+            _clientInfo.CurrentLatitude = _location.GetLatitude();
+            _clientInfo.CurrentLongitude = _location.GetLongitude();
+            _clientInfo.CurrentAltitude = _location.GetAltitude();
 
+            
             // 초기 위치 정보 저장
             if (!_clientInfo.OriginalValuesAreSet)
             {
                 _clientInfo.StartingLatitude = _clientInfo.CurrentLatitude;
                 _clientInfo.StartingLongitude = _clientInfo.CurrentLongitude;
                 _clientInfo.StartingAltitude = _clientInfo.CurrentAltitude;
-                _clientInfo.CorrectedBearingOffset = Input.compass.trueHeading;
+                _clientInfo.CorrectedBearingOffset = _location.GetTrueHeading();
 
                 _clientInfo.OriginalValuesAreSet = true;
                 _clientInfo.LodingCanvas.GetComponent<LoadingCanvasBehaviour>().HideLodingCanvas();
@@ -329,29 +362,6 @@ public class MainBehaviour : MonoBehaviour
             // GPS 측정 주기: `intervalInSecond`초
             yield return new WaitForSeconds(intervalInSecond);
         }
-    }
-
-    private Vector3 _lastUserPosition = new Vector3(0, 0, 0);
-    void MoveObjectAccordingToGps()
-    {
-        Vector3 currentUserPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
-        Vector3 moveAmount = _lastUserPosition - currentUserPosition;
-
-        foreach (var arObject in _arObjects.Values)
-        {
-            var arPlane = (ArPlane) arObject;
-            arPlane.GameObj.transform.Translate(moveAmount);
-            arPlane.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
-            arPlane.CommentCanvas.GameObj.transform.Translate(moveAmount);
-        }
-
-        foreach (var ar3dObject in _ar3dObjects.Values)
-        {
-            ar3dObject.GameObj.transform.Translate(moveAmount);
-            ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
-        }
-
-        _lastUserPosition = currentUserPosition;
     }
 
     /// <summary>
@@ -367,7 +377,6 @@ public class MainBehaviour : MonoBehaviour
 
         while (true)
         {
-
             if (_clientInfo.InsideOption)
             {
                 _clientInfo.OriginalValuesAreSet = false;
@@ -377,7 +386,6 @@ public class MainBehaviour : MonoBehaviour
             }
             else
             {
-
                 string latitude = _clientInfo.CurrentLatitude.ToString();
                 string longitude = _clientInfo.CurrentLongitude.ToString();
                 string altitude = _clientInfo.CurrentAltitude.ToString();
@@ -419,7 +427,9 @@ public class MainBehaviour : MonoBehaviour
                 form.AddField("longitudeOption", longitudeOption);
 
                 // 2d 오브젝트 목록 가져오기: GPS 정보를 서버에 POST
-                using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/getGPS_distance.php", form))
+                using (UnityWebRequest www = UnityWebRequest.Post(
+                    "http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/getGPS_distance.php",
+                    form))
                 {
                     // POST 전송
                     yield return www.SendWebRequest();
@@ -474,7 +484,7 @@ public class MainBehaviour : MonoBehaviour
                                     AdNumber = jsonArObject.ad_no,
                                     Name = jsonArObject.name,
                                     GpsInfo = new Vector3(jsonArObject.latitude, jsonArObject.longitude,
-                                    jsonArObject.altitude),
+                                        jsonArObject.altitude),
                                     Bearing = jsonArObject.bearing,
                                     TextureUrl = jsonArObject.texture_url,
                                     BannerUrl = jsonArObject.banner_url,
@@ -503,7 +513,6 @@ public class MainBehaviour : MonoBehaviour
 
         while (true)
         {
-
             if (_clientInfo.InsideOption)
             {
                 _clientInfo.OriginalValuesAreSet = false;
@@ -513,7 +522,6 @@ public class MainBehaviour : MonoBehaviour
             }
             else
             {
-
                 string latitude = _clientInfo.CurrentLatitude.ToString();
                 string longitude = _clientInfo.CurrentLongitude.ToString();
                 string altitude = _clientInfo.CurrentAltitude.ToString();
@@ -549,7 +557,9 @@ public class MainBehaviour : MonoBehaviour
                 form.AddField("longitudeOption", longitudeOption);
 
                 // 3D 오브젝트 목록 가져오기: GPS 정보를 서버에 POST
-                using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/get3D_distance.php", form))
+                using (UnityWebRequest www = UnityWebRequest.Post(
+                    "http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/get3D_distance.php",
+                    form))
                 {
                     // POST 전송
                     yield return www.SendWebRequest();
@@ -605,7 +615,7 @@ public class MainBehaviour : MonoBehaviour
                                     ObjectNumber = json3dArObject.object_no,
                                     typeName = json3dArObject.typeName,
                                     GpsInfo = new Vector3(json3dArObject.latitude, json3dArObject.longitude,
-                                    json3dArObject.altitude),
+                                        json3dArObject.altitude),
                                     Bearing = json3dArObject.bearing,
                                     TextAlternateToTexture = "",
                                 };
@@ -632,7 +642,7 @@ public class MainBehaviour : MonoBehaviour
             // 자이로 센서를 바탕으로 기기가 아래(75~90도)나 위(270~285도)를 보고 있을 때는 카운트 하지 않음
             if ((0f <= gyroAngles.x && gyroAngles.x < 75f) || (285f < gyroAngles.x && gyroAngles.x <= 360f))
             {
-                var difference = Input.compass.trueHeading - gyroAngles.y;
+                var difference = _location.GetTrueHeading() - gyroAngles.y;
 
                 // 버퍼에 각 차이 저장
                 _clientInfo.BearingDifferenceBuffer[_clientInfo.BearingDifferenceIndex] = difference;
@@ -685,13 +695,15 @@ public class MainBehaviour : MonoBehaviour
             foreach (var arObject in _arObjects.Values)
             {
                 // 모든 물체를 생성시 카메라 포지션 기준 회전
-                arObject.GameObj.transform.RotateAround(arObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition
+                arObject.GameObj.transform.RotateAround(
+                    arObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition
                     , new Vector3(0.0f, 1.0f, 0.0f), averageOfDifferences - _clientInfo.CorrectedBearingOffset);
 
-                if ((arObject.ObjectType == ArObjectType.AdPlane) && (((ArPlane)arObject).CommentCanvas != null))
+                if ((arObject.ObjectType == ArObjectType.AdPlane) && (((ArPlane) arObject).CommentCanvas != null))
                 {
-                    ((ArPlane)arObject).CommentCanvas.GameObj.transform.RotateAround(arObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition
-                    , new Vector3(0.0f, 1.0f, 0.0f), averageOfDifferences - _clientInfo.CorrectedBearingOffset);
+                    ((ArPlane) arObject).CommentCanvas.GameObj.transform.RotateAround(
+                        arObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition
+                        , new Vector3(0.0f, 1.0f, 0.0f), averageOfDifferences - _clientInfo.CorrectedBearingOffset);
                 }
             }
             // Bearing Offset 값을 새로 계산된 값으로 반영
@@ -708,7 +720,8 @@ public class MainBehaviour : MonoBehaviour
         checkLogForm.AddField("Input_user", userId);
         checkLogForm.AddField("Input_ad", adNumber);
 
-        using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/check_log.php", checkLogForm))
+        using (UnityWebRequest www = UnityWebRequest.Post(
+            "http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/check_log.php", checkLogForm))
         {
             yield return www.SendWebRequest();
 
@@ -724,7 +737,9 @@ public class MainBehaviour : MonoBehaviour
                     WWWForm adInfoForm = new WWWForm();
                     adInfoForm.AddField("Input_ad", adNumber);
 
-                    using (UnityWebRequest www2 = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/adinfo.php", adInfoForm))
+                    using (UnityWebRequest www2 = UnityWebRequest.Post(
+                        "http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/adinfo.php",
+                        adInfoForm))
                     {
                         yield return www2.SendWebRequest();
 
@@ -742,7 +757,9 @@ public class MainBehaviour : MonoBehaviour
                             pointForm.AddField("Input_user", userId);
                             pointForm.AddField("Input_ad", adNumber);
 
-                            using (UnityWebRequest www3 = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/earn_point.php", pointForm))
+                            using (UnityWebRequest www3 = UnityWebRequest.Post(
+                                "http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/earn_point.php",
+                                pointForm))
                             {
                                 yield return www3.SendWebRequest();
 
@@ -757,7 +774,6 @@ public class MainBehaviour : MonoBehaviour
                     }
 
                     StartCoroutine(GetPointCoroutine());
-
                 }
                 else ShowToastOnUiThread("You already clicked!");
             }
@@ -793,7 +809,8 @@ public class MainBehaviour : MonoBehaviour
         AndroidJavaObject context = _currentActivity.Call<AndroidJavaObject>("getApplicationContext");
         AndroidJavaClass Toast = new AndroidJavaClass("android.widget.Toast");
         AndroidJavaObject javaString = new AndroidJavaObject("java.lang.String", _toastString);
-        AndroidJavaObject toast = Toast.CallStatic<AndroidJavaObject>("makeText", context, javaString, Toast.GetStatic<int>("LENGTH_SHORT"));
+        AndroidJavaObject toast =
+            Toast.CallStatic<AndroidJavaObject>("makeText", context, javaString, Toast.GetStatic<int>("LENGTH_SHORT"));
         toast.Call("show");
     }
 
@@ -805,7 +822,8 @@ public class MainBehaviour : MonoBehaviour
         WWWForm checkPointForm = new WWWForm();
         checkPointForm.AddField("Input_user", userID);
 
-        using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/show_point.php", checkPointForm))
+        using (UnityWebRequest www = UnityWebRequest.Post(
+            "http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/show_point.php", checkPointForm))
         {
             yield return www.SendWebRequest();
 
@@ -822,7 +840,9 @@ public class MainBehaviour : MonoBehaviour
 
     public void onClickHorseBtn()
     {
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude,
+            _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude,
+            _clientInfo.CurrentLongitude, 0);
         //Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, 37.31263f, 126.8481f, 0);
         createObject("horse", unityPosition);
         //createObject("horse", 40, -1, 0);
@@ -830,7 +850,9 @@ public class MainBehaviour : MonoBehaviour
 
     public void onClickGift1Btn()
     {
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude,
+            _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude,
+            _clientInfo.CurrentLongitude, 0);
         //Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, 37.31263f, 126.8481f, 0);
         createObject("gift_1", unityPosition);
         //createObject("horse", 40, -1, 0);
@@ -838,7 +860,9 @@ public class MainBehaviour : MonoBehaviour
 
     public void onClickGift2Btn()
     {
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude,
+            _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude,
+            _clientInfo.CurrentLongitude, 0);
         //Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, 37.31263f, 126.8481f, 0);
         createObject("gift_2", unityPosition);
         //createObject("horse", 40, -1, 0);
@@ -846,7 +870,9 @@ public class MainBehaviour : MonoBehaviour
 
     public void onClickGift3Btn()
     {
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude,
+            _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude,
+            _clientInfo.CurrentLongitude, 0);
         //Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, 37.31263f, 126.8481f, 0);
         createObject("gift_3", unityPosition);
         //createObject("horse", 40, -1, 0);
@@ -854,7 +880,9 @@ public class MainBehaviour : MonoBehaviour
 
     public void onClickGift4Btn()
     {
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude,
+            _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude,
+            _clientInfo.CurrentLongitude, 0);
         //Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, 37.31263f, 126.8481f, 0);
         createObject("gift_4", unityPosition);
         //createObject("horse", 40, -1, 0);
@@ -862,7 +890,9 @@ public class MainBehaviour : MonoBehaviour
 
     public void onClickButterflyBtn()
     {
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude,
+            _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude,
+            _clientInfo.CurrentLongitude, 0);
         //Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, 37.31263f, 126.8481f, 0);
         createObject("Butterfly", unityPosition);
         //createObject("horse", 40, -1, 0);
@@ -870,7 +900,9 @@ public class MainBehaviour : MonoBehaviour
 
     public void onClickTreeBtn()
     {
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude,
+            _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude,
+            _clientInfo.CurrentLongitude, 0);
         //Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, 37.31263f, 126.8481f, 0);
         createObject("tree", unityPosition);
         //createObject("horse", 40, -1, 0);
@@ -878,7 +910,9 @@ public class MainBehaviour : MonoBehaviour
 
     public void onClickGorillaBtn()
     {
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude,
+            _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude,
+            _clientInfo.CurrentLongitude, 0);
         //Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, 37.31263f, 126.8481f, 0);
         createObject("gorilla", unityPosition);
         //createObject("horse", 40, -1, 0);
@@ -886,7 +920,9 @@ public class MainBehaviour : MonoBehaviour
 
     public void onClickLightBtn()
     {
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude,
+            _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude,
+            _clientInfo.CurrentLongitude, 0);
         //Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, 37.31263f, 126.8481f, 0);
         createObject("light", unityPosition);
         //createObject("horse", 40, -1, 0);
@@ -902,7 +938,8 @@ public class MainBehaviour : MonoBehaviour
         StartCoroutine(ObjectCreateCoroutine(x, y, z, typeName, _userInfo.UserId, bearing, point));
     }
 
-    private IEnumerator ObjectCreateCoroutine(string x, string y, string z, string typeName, string id, string bearing, string point)
+    private IEnumerator ObjectCreateCoroutine(string x, string y, string z, string typeName, string id, string bearing,
+        string point)
     {
         WWWForm form = new WWWForm();
         form.AddField("latitude", x);
@@ -913,7 +950,8 @@ public class MainBehaviour : MonoBehaviour
         form.AddField("bearing", bearing);
         form.AddField("point", point);
 
-        using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/add_3d_Object.php", form))
+        using (UnityWebRequest www = UnityWebRequest.Post(
+            "http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/add_3d_Object.php", form))
         {
             yield return www.SendWebRequest();
 
