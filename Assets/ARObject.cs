@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 /// <summary>
@@ -35,6 +36,25 @@ public class Ad3dInfo
     public string TextAlternateToTexture = "";
 };
 
+[System.Serializable]
+public class JsonArCommentData
+{
+    public float latitude;
+    public float longitude;
+    public float altitude;
+    public float Bearing = 0.0f;
+    public int commnetNumber;
+    public string userId;
+    public string comment;
+    public string dateTime;
+};
+
+[System.Serializable]
+public class JsonArCommentDataArray
+{
+    public JsonArCommentData[] data;
+}
+
 /// <summary>
 /// 댓글 하나를 나타내는 객체.
 /// </summary>
@@ -42,6 +62,7 @@ public class Ad3dInfo
 [System.Serializable]
 public class JsonCommentData
 {
+    public int comm_no;
     public string userId;
     public string comment;
     public string dateTime;
@@ -385,5 +406,55 @@ public class ArCommentCanvas : ArObject
     {
         MonoBehaviour.Destroy(GameObj);
         GameObj = null;
+    }
+}
+
+public class ArComment : ArObject
+{
+    Json3dData _commentData;
+    
+    public ArComment(Json3dData data, ClientInfo info)
+    {
+        ClientInfoObj = info;
+        _commentData = data;
+        Create();
+    }
+
+    private IEnumerator CreateObject()
+    {
+        // GPS 정보를 사용하기 위해 GPS 초기화가 안된 경우 대기.
+        if (Application.platform == RuntimePlatform.Android)
+            yield return new WaitUntil(() => ClientInfoObj.OriginalValuesAreSet);
+
+        // 초기 포지션 설정
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(ClientInfoObj.StartingLatitude, ClientInfoObj.StartingLongitude, ClientInfoObj.StartingAltitude,
+            _commentData.latitude, _commentData.longitude, _commentData.altitude);
+        unityPosition.y = 0; // 고도 사용 안함.
+
+        // Create Object
+        GameObj = MonoBehaviour.Instantiate(Resources.Load("Prefabs/ArComment") as GameObject) as GameObject;
+
+        GameObj.transform.position = unityPosition;
+        GameObj.transform.eulerAngles = new Vector3(0, _commentData.bearing, 0);
+
+        GameObj.transform.GetChild(0).GetChild(0).GetComponent<Text>().text = _commentData.content;
+    }
+
+    public override void Create()
+    {
+        ObjectType = ArObjectType.ArComment;
+        StaticCoroutine.DoCoroutine(CreateObject());
+    }
+
+    public override void Destroy()
+    {
+        MainBehaviour.Destroy(GameObj);
+        GameObj = null;
+        _commentData = null;
+    }
+
+    public override void Update()
+    {
+        throw new NotImplementedException();
     }
 }

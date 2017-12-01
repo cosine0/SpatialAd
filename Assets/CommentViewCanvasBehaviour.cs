@@ -33,7 +33,7 @@ public class CommentViewCanvasBehaviour : MonoBehaviour {
                 // - get comment list
                 string responseJsonString = www.downloadHandler.text;
                 JsonCommentDataArray commentList = JsonUtility.FromJson<JsonCommentDataArray>(responseJsonString);
-                
+
                 if (commentList.data.Length == 0)
                 {
                     GameObject commentPanel = MonoBehaviour.Instantiate(Resources.Load("Prefabs/CommentViewPrefab") as GameObject) as GameObject;
@@ -52,21 +52,13 @@ public class CommentViewCanvasBehaviour : MonoBehaviour {
                         GameObject commentPanel = MonoBehaviour.Instantiate(Resources.Load("Prefabs/CommentViewPrefab") as GameObject) as GameObject;
                         // 부모 자식 관계 생성
                         commentPanel.transform.SetParent(this.transform.GetChild(0).GetChild(1).GetChild(0).GetChild(0), false); // parent properties inheritance false
-                                                                                                                 // comment panel object transform에서 Text Component Child 2개(id, comment)를 찾아 텍스트 수정.
+                                                                                                                                 // comment panel object transform에서 Text Component Child 2개(id, comment)를 찾아 텍스트 수정.
                         commentPanel.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text = commentList.data[i].userId;
                         commentPanel.transform.GetChild(1).GetComponent<UnityEngine.UI.Text>().text = commentList.data[i].comment;
-                    }
-
-                    // scroll view area calulate
-                    if (commentList.data.Length > 7)
-                    {
-                        Rect _groupRect = this.transform.GetChild(0).GetChild(1).GetChild(0).GetChild(0).GetComponent<Rect>();
-                        _groupRect.yMax -= (commentList.data.Length - 7) * 250;
                     }
                 }
             }
         }
-        this.transform.GetChild(0).GetChild(1).GetChild(1).GetComponent<Scrollbar>().value = 0; // 작동안됨
     }
 
     public void LeaveComment()
