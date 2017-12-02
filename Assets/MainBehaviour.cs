@@ -122,8 +122,6 @@ public class MainBehaviour : MonoBehaviour
         // 주변 오브젝트 목록 주기적 업데이트를 위한 코루틴 시작
         StartCoroutine(GetArObjectList(5.0f));
         StartCoroutine(Get3dArObjectList(5.0f));
-
-        ////////////////////////////////////
     }
 
     private void Update()
