@@ -45,15 +45,13 @@ public class ArCommentInputBehaviour : MonoBehaviour {
 
     private IEnumerator CommitArComment()
     {
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
-
         WWWForm form = new WWWForm();
         form.AddField("typeName", "comment");
         form.AddField("user", _userInfo.UserId);
         form.AddField("content", _comment.text);
-        form.AddField("latitude", unityPosition.x.ToString());
-        form.AddField("longitude", unityPosition.y.ToString());
-        form.AddField("altitude", unityPosition.z.ToString());
+        form.AddField("latitude", _clientInfo.CurrentLatitude.ToString());
+        form.AddField("longitude", _clientInfo.CurrentLongitude.ToString());
+        form.AddField("altitude", _clientInfo.CurrentAltitude.ToString());
         form.AddField("bearing", _clientInfo.CurrentBearing.ToString());
         
 

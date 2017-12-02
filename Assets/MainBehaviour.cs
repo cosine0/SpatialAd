@@ -284,7 +284,11 @@ public class MainBehaviour : MonoBehaviour
             arPlane.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
             arPlane.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
             //arPlane.GameObj.transform.Translate(moveAmount, Space.World);
-            arPlane.GameObj.transform.position = Vector3.Lerp(arPlane.GameObj.transform.position, arPlane.GameObj.GetComponent<DataContainer>().TargetPosition, Constants.LerpFactor);
+            //arPlane.GameObj.transform.position = Vector3.Lerp(arPlane.GameObj.transform.position, arPlane.GameObj.GetComponent<DataContainer>().TargetPosition, Constants.LerpFactor);
+            //arPlane.GameObj.transform.position = Vector3.Lerp(arPlane.GameObj.transform.position, arPlane.GameObj.GetComponent<DataContainer>().TargetPosition, Time.deltaTime / 0.3f);
+            if (!moveAmount.Equals(Vector3.zero))
+                arPlane.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude / 0.3f;
+            arPlane.GameObj.transform.position = Vector3.MoveTowards(arPlane.GameObj.transform.position, arPlane.GameObj.GetComponent<DataContainer>().TargetPosition, arPlane.GameObj.GetComponent<DataContainer>().MaxDistance * Time.deltaTime);
 
             if (_clientInfo.CommentViewOption && (arPlane.CommentCanvas != null))
                 if (arPlane.CommentCanvas.IsCreateComplete)

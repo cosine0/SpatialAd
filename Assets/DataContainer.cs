@@ -8,5 +8,6 @@ public class DataContainer : MonoBehaviour {
     public int AdNum;
     public Vector3 CreatedCameraPosition;
     public Vector3 TargetPosition;
+    public float MaxDistance;
     public ArObjectType ObjectType;
 }

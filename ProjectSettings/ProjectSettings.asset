@@ -644,9 +644,9 @@ PlayerSettings:
     UNet: 1
   facebookSdkVersion: 7.9.4
   apiCompatibilityLevel: 2
-  cloudProjectId: 69f2c3a1-5dbe-46c6-ae6c-cb087fba57a0
+  cloudProjectId: ae0cbc66-3217-4561-a203-c0341f51a801
   projectName: SpatialAd (1)
-  organizationId: yongyong123
+  organizationId: won-dong-ho
   cloudEnabled: 0
   enableNativePlatformBackendsForNewInputSystem: 0
   disableOldInputManagerSupport: 0
