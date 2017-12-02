@@ -118,6 +118,7 @@ public class JsonOptionObjectDataArray
 public abstract class ArObject
 {
     public int Id;
+    public bool IsCreateComplete;
 
     /// <summary>
     /// 오브젝트 종류.
@@ -168,6 +169,7 @@ public class ArPlane : ArObject
     {
         Info = info;
         ClientInfoObj = clientInfo;
+        IsCreateComplete = false;
         Create();
     }
 
@@ -219,9 +221,12 @@ public class ArPlane : ArObject
 
         GameObj.transform.localScale = new Vector3(Info.Width, Info.Height, Info.Height);
         GameObj.transform.position = unityPosition;
+        GameObj.GetComponent<DataContainer>().TargetPosition = unityPosition;
         GameObj.transform.eulerAngles = new Vector3(90.0f, Info.Bearing - 90.0f, 90.0f);
         // GameOBJ.transform.rotation = Quaternion.Euler(90.0f, -90.0f, 90.0f);
         // 모든 plane은 new Vector3(90.0f, -90.0f, 90.0f); 만큼 회전해야함 
+
+        IsCreateComplete = true;
     }
 
     private IEnumerator CreateCommentCanvas(int _adNumber, ArPlane arPlaneObject)
@@ -252,6 +257,7 @@ public class ArPlane : ArObject
 
                 // ad plane member로 할당
                 arPlaneObject.CommentCanvas = new ArCommentCanvas(canvasObject);
+                arPlaneObject.CommentCanvas.IsCreateComplete = false;
                 // ad plane 인근 위치로 이동 및 회전
                 yield return new WaitUntil(() => (arPlaneObject.GameObj != null));
                 CommentCanvas.GameObj.transform.position = this.GameObj.transform.position;
@@ -267,7 +273,7 @@ public class ArPlane : ArObject
                     (this.GameObj.transform.localScale.y - (CommentCanvas.GameObj.transform.localScale.y * 100)) * 5.0f, 0.0f);
 
                 CommentCanvas.GameObj.transform.Translate(movement, Space.Self);
-
+                canvasObject.GetComponent<DataContainer>().TargetPosition = canvasObject.transform.position;
                 // object multiplier = 5(local width, height 10/2)
                 // commentCanvas 1000 -> scaling 0.01 -> local width, height 10
 
@@ -310,6 +316,7 @@ public class ArPlane : ArObject
                 }
             }
         }
+        arPlaneObject.CommentCanvas.IsCreateComplete = true;
     }
 
     public override void Update()
@@ -357,6 +364,7 @@ public class Ar3dPlane : ArObject
     {
         Info = info;
         ClientInfoObj = clientInfo;
+        IsCreateComplete = false;
         Create();
     }
 
@@ -391,8 +399,10 @@ public class Ar3dPlane : ArObject
         unityPosition.y = 0; // 고도 사용 안함.
 
         GameObj.transform.position = unityPosition;
+        GameObj.GetComponent<DataContainer>().TargetPosition = unityPosition;
         GameObj.transform.eulerAngles = new Vector3(0, Info.Bearing, 0);
         GameObj.transform.RotateAround(ClientInfoObj.MainCamera.transform.position, new Vector3(0.0f, 1.0f, 0.0f), -ClientInfoObj.CorrectedBearingOffset); // 카메라 포지션 기준 회전
+        IsCreateComplete = true;
     }
 
     public GameObject createObject(string typeName, Vector3 unityPosition)
@@ -453,6 +463,7 @@ public class ArComment : ArObject
     {
         ClientInfoObj = info;
         _commentData = data;
+        IsCreateComplete = false;
         Create();
     }
 
@@ -471,9 +482,12 @@ public class ArComment : ArObject
         GameObj = MonoBehaviour.Instantiate(Resources.Load("Prefabs/ArComment") as GameObject) as GameObject;
         GameObj.AddComponent<DataContainer>().CreatedCameraPosition = Vector3.zero;
         GameObj.transform.position = unityPosition;
+        GameObj.GetComponent<DataContainer>().TargetPosition = unityPosition;
         GameObj.transform.eulerAngles = new Vector3(0, _commentData.bearing, 0);
 
         GameObj.transform.GetChild(0).GetChild(0).GetComponent<Text>().text = _commentData.content;
+
+        IsCreateComplete = true;
     }
 
     public override void Create()

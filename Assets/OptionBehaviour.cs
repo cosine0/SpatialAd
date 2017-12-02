@@ -71,7 +71,6 @@ public class OptionBehaviour : MonoBehaviour
     public void OnClickLogout()
     {
         StartCoroutine(Logout());
-        _clientInfo.OriginalValuesAreSet = false;
     }
 
     private IEnumerator Logout()
@@ -89,8 +88,11 @@ public class OptionBehaviour : MonoBehaviour
             }
             else
             {
-                ShowToastOnUiThread("Logout succeeded.");
+                MainBehaviour.Destroy(_clientInfo.LodingCanvas);
+                MainBehaviour.Destroy(_clientInfo.gameObject);
+                MainBehaviour.Destroy(_userInfo.gameObject);
                 _clientInfo.OriginalValuesAreSet = false;
+                ShowToastOnUiThread("Logout succeeded.");
                 SceneManager.LoadScene("login");
             }
         }

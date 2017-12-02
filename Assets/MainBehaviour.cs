@@ -54,21 +54,6 @@ public class Json3dDataArray
 {
     public Json3dData[] data;
 }
-
-public class DT : Vuforia.PositionalDeviceTracker
-{
-    public override bool Start()
-    {
-        
-        throw new NotImplementedException();
-    }
-
-    public override void Stop()
-    {
-        throw new NotImplementedException();
-    }
-}
-
 /// <summary>
 /// 인앱 scene에 필요한 스크립트를 갖는 Behaviour.
 /// </summary>
@@ -110,12 +95,12 @@ public class MainBehaviour : MonoBehaviour
 
     private void Start()
     {
-        _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
-        {
-            {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}},
-            {100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
-        });
-        //_location = UnityLocationProvider.Instance;
+        //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+        //{
+        //    {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}},
+        //    {100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+        //});
+        _location = UnityLocationProvider.Instance;
 
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
         _clientInfo = GameObject.FindGameObjectWithTag("ClientInfo").GetComponent<ClientInfo>();
@@ -138,9 +123,6 @@ public class MainBehaviour : MonoBehaviour
         StartCoroutine(GetArObjectList(5.0f));
         StartCoroutine(Get3dArObjectList(5.0f));
 
-        //////////////// tracker test code///////////////////
-        //Vuforia.MixedRealityController.Instance.SetMode(Vuforia.MixedRealityController.Mode.HANDHELD_AR_DEVICETRACKER);
-        //Debug.Log((Vuforia.MixedRealityController.Instance.SetMode(Vuforia.MixedRealityController.Mode.HANDHELD_AR_DEVICETRACKER) ? "TRUE" : "FALSE"));
         ////////////////////////////////////
     }
 
@@ -239,6 +221,7 @@ public class MainBehaviour : MonoBehaviour
             _clientInfo.StartingAltitude
             + "\nGPS: " + _clientInfo.CurrentLatitude + ", " + _clientInfo.CurrentLongitude + ", " +
             _clientInfo.CurrentAltitude
+            + "\nFPS: " + 1.0f / Time.deltaTime
             + "\nHorizontal accuracy: " + Input.location.lastData.horizontalAccuracy
             + "\ncamera position: " + _clientInfo.MainCamera.transform.position
             + "\ncamera angle: " + _clientInfo.MainCamera.transform.eulerAngles
@@ -294,19 +277,35 @@ public class MainBehaviour : MonoBehaviour
 
         // 물체를 카메라의 이동 반대방향으로 옮기기
         Vector3 moveAmount = _lastUserPosition - currentUserPosition;
-
+        
         foreach (var arObject in _arObjects.Values)
         {
             var arPlane = (ArPlane)arObject;
-            arPlane.GameObj.transform.Translate(moveAmount, Space.World);
             arPlane.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
-            arPlane.CommentCanvas.GameObj.transform.Translate(moveAmount, Space.World);
+            arPlane.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
+            //arPlane.GameObj.transform.Translate(moveAmount, Space.World);
+            arPlane.GameObj.transform.position = Vector3.Lerp(arPlane.GameObj.transform.position, arPlane.GameObj.GetComponent<DataContainer>().TargetPosition, Constants.LerpFactor);
+
+            if (_clientInfo.CommentViewOption && (arPlane.CommentCanvas != null))
+                if (arPlane.CommentCanvas.IsCreateComplete)
+                {
+                    //arPlane.CommentCanvas.GameObj.transform.Translate(moveAmount, Space.World);
+                    arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
+                    arPlane.CommentCanvas.GameObj.transform.position = Vector3.Lerp(arPlane.CommentCanvas.GameObj.transform.position
+                        , arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().TargetPosition, Constants.LerpFactor);
+                }
         }
 
-        foreach (var ar3dObject in _ar3dObjects.Values)
+        if (_clientInfo.Object3dViewOption)
         {
-            ar3dObject.GameObj.transform.Translate(moveAmount, Space.World);
-            ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
+            foreach (var ar3dObject in _ar3dObjects.Values)
+            {
+                //ar3dObject.GameObj.transform.Translate(moveAmount, Space.World);
+                ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
+                ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
+                ar3dObject.GameObj.transform.position = Vector3.Lerp(ar3dObject.GameObj.transform.position, ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition
+                    , Constants.LerpFactor);
+            }
         }
 
         _lastUserPosition = currentUserPosition;
@@ -362,7 +361,6 @@ public class MainBehaviour : MonoBehaviour
             _clientInfo.CurrentLatitude = _location.GetLatitude();
             _clientInfo.CurrentLongitude = _location.GetLongitude();
             _clientInfo.CurrentAltitude = _location.GetAltitude();
-
             
             // 초기 위치 정보 저장
             if (!_clientInfo.OriginalValuesAreSet)
@@ -718,14 +716,30 @@ public class MainBehaviour : MonoBehaviour
             foreach (var arObject in _arObjects.Values)
             {
                 // 모든 물체를 생성시 카메라 포지션 기준 회전
+                if (!arObject.IsCreateComplete)
+                    yield return new WaitUntil(() => (arObject.IsCreateComplete == true));
+
                 arObject.GameObj.transform.RotateAround(arObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition
                     , new Vector3(0.0f, 1.0f, 0.0f), averageOfDifferences - _clientInfo.CorrectedBearingOffset);
 
+                if (((ArPlane)arObject).CommentCanvas != null)
+                    yield return new WaitUntil(() => (((ArPlane)arObject).CommentCanvas.IsCreateComplete == true));
+
                 if ((arObject.ObjectType == ArObjectType.AdPlane) && (((ArPlane)arObject).CommentCanvas != null))
                 {
+
                     ((ArPlane)arObject).CommentCanvas.GameObj.transform.RotateAround(arObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition
                     , new Vector3(0.0f, 1.0f, 0.0f), averageOfDifferences - _clientInfo.CorrectedBearingOffset);
                 }
+            }
+
+            foreach (var arObject in _ar3dObjects.Values)
+            {
+                if (!arObject.IsCreateComplete)
+                    yield return new WaitUntil(() => (arObject.IsCreateComplete == true));
+                // 모든 물체를 생성시 카메라 포지션 기준 회전
+                arObject.GameObj.transform.RotateAround(arObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition
+                    , new Vector3(0.0f, 1.0f, 0.0f), averageOfDifferences - _clientInfo.CorrectedBearingOffset);
             }
             // Bearing Offset 값을 새로 계산된 값으로 반영
             _clientInfo.CorrectedBearingOffset = averageOfDifferences;

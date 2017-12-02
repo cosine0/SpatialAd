@@ -8,4 +8,5 @@ static class Constants
     public const float CompassMeasureIntervalInSecond = 0.1f;
     public const float GpsMeasureIntervalInSecond = 0.3f;
     public const int BearingDifferenceBufferSize = 600;
+    public const float LerpFactor = 0.2f;
 }
