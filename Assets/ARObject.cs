@@ -262,7 +262,7 @@ public class ArPlane : ArObject
                 yield return new WaitUntil(() => (arPlaneObject.GameObj != null));
                 CommentCanvas.GameObj.transform.position = this.GameObj.transform.position;
                 CommentCanvas.GameObj.transform.eulerAngles = new Vector3(0.0f, this.Info.Bearing, 0.0f);
-                CommentCanvas.GameObj.transform.localScale = new Vector3(0.005f, 0.005f, 0.005f);
+                CommentCanvas.GameObj.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
                 // commentCanvas move and rotate
                 yield return new WaitUntil(() => (CommentCanvas != null && this.GameObj != null));
 
@@ -482,6 +482,7 @@ public class ArComment : ArObject
         GameObj = MonoBehaviour.Instantiate(Resources.Load("Prefabs/ArComment") as GameObject) as GameObject;
         GameObj.AddComponent<DataContainer>().CreatedCameraPosition = Vector3.zero;
         GameObj.transform.position = unityPosition;
+        GameObj.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
         GameObj.GetComponent<DataContainer>().TargetPosition = unityPosition;
         GameObj.transform.eulerAngles = new Vector3(0, _commentData.bearing, 0);
 
