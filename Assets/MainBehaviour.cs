@@ -95,12 +95,12 @@ public class MainBehaviour : MonoBehaviour
 
     private void Start()
     {
-        _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
-        {
-            {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}}
-            //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
-        });
-        //_location = UnityLocationProvider.Instance;
+        //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+        //{
+        //    {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}}
+        //    //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+        //});
+        _location = UnityLocationProvider.Instance;
 
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
         _clientInfo = GameObject.FindGameObjectWithTag("ClientInfo").GetComponent<ClientInfo>();
@@ -365,10 +365,20 @@ public class MainBehaviour : MonoBehaviour
             }
 
             _clientInfo.LastGpsMeasureTime = Time.time;
+
+            // 필터링 안함
+            //_clientInfo.CurrentLatitude = _location.GetLatitude();
+            //_clientInfo.CurrentLongitude = _location.GetLongitude();
+            //_clientInfo.CurrentAltitude = _location.GetAltitude();
+
+            //필터링
+            // invalid value filter
             if (Input.location.lastData.horizontalAccuracy < 10)
             {
                 _clientInfo.WalkSpeed = GpsCalulator.DistanceCalculate(_clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude
                     , _location.GetLatitude(), _location.GetLongitude()) / 0.3f;
+
+                //statistical filter
                 if ((int)_clientInfo.WalkSpeed < 10)
                 {
                     // DontDestroyOnLoad 오브젝트인 _clientInfo의 현재 위치 업데이트
