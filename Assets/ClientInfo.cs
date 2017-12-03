@@ -25,6 +25,7 @@ public class ClientInfo : MonoBehaviour
     public float CurrentLongitude = 0.0f;
     public float CurrentAltitude = 0.0f;
     public float LastGpsMeasureTime = 0.0f;
+    public float WalkSpeed = 0.0f;
 
     public GameObject MainCamera = null;
     public GameObject LodingCanvas = null;
