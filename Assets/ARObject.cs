@@ -269,7 +269,9 @@ public class ArPlane : ArObject
                 // ad plane의 scale 이 1보다 작을 경우 commentcanvas scale링 필요할 것으로 보임
 
                 // local space 기준 기동
-                Vector3 movement = new Vector3((this.GameObj.transform.localScale.x * 5.0f + (CommentCanvas.GameObj.transform.localScale.x * 500)) + 1,
+                //Vector3 movement = new Vector3((this.GameObj.transform.localScale.x * 5.0f + (CommentCanvas.GameObj.transform.localScale.x * 500)) + 1,
+                //    (this.GameObj.transform.localScale.y - (CommentCanvas.GameObj.transform.localScale.y * 100)) * 5.0f, 0.0f);
+                Vector3 movement = new Vector3((this.GameObj.transform.localScale.x * 5.0f + (CommentCanvas.GameObj.transform.localScale.x * 500)) + 0.2f,
                     (this.GameObj.transform.localScale.y - (CommentCanvas.GameObj.transform.localScale.y * 100)) * 5.0f, 0.0f);
 
                 CommentCanvas.GameObj.transform.Translate(movement, Space.Self);
@@ -480,6 +482,7 @@ public class ArComment : ArObject
        
         // Create Object
         GameObj = MonoBehaviour.Instantiate(Resources.Load("Prefabs/ArComment") as GameObject) as GameObject;
+        GameObj.name = "comment";
         GameObj.AddComponent<DataContainer>().CreatedCameraPosition = Vector3.zero;
         GameObj.transform.position = unityPosition;
         GameObj.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
