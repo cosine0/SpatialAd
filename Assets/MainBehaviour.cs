@@ -116,7 +116,7 @@ public class MainBehaviour : MonoBehaviour
         //    {70.0f, new LocationPoint{Latitude = 37.450700f + 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}}
         //});
         // _location = UnityLocationProvider.Instance;
-        _location = new ServerNearestReplayLocationProvider(35);
+        _location = new ServerNearestReplayLocationProvider(42);
 
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
         _clientInfo = GameObject.FindGameObjectWithTag("ClientInfo").GetComponent<ClientInfo>();

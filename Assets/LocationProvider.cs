@@ -70,6 +70,7 @@ class LocationPoint
     public float Longitude;
     public float Altitude;
     public float TrueHeading;
+    public float HorizontalAccuracy;
 }
 
 class LerpReplayLocationProvider : LocationProvider
@@ -271,6 +272,11 @@ class LerpReplayLocationProvider : LocationProvider
                 upperHeading += 360;
             return (Mathf.Lerp(lowerHeading, upperHeading, (currentTime - lowerTime) / (upperTime - lowerTime)) % 360f + 360f) % 360f;
         }
+    }
+
+    public override float GetHorizontalAccuracy()
+    {
+        return 1;
     }
 }
 
@@ -482,6 +488,52 @@ class NearestReplayLocationProvider : LocationProvider
                 return LocationPoints[upperTime].TrueHeading;
         }
     }
+
+    public override float GetHorizontalAccuracy()
+    {
+
+        var currentTime = Time.time - StartTime;
+        var timeList = LocationPoints.Keys.ToList();
+        var index = timeList.BinarySearch(currentTime);
+        int lowerBound, upperBound;
+        if (index >= 0)
+        {
+            if (timeList[0] == currentTime)
+            {
+                lowerBound = 0;
+                upperBound = 1;
+            }
+            else
+            {
+                lowerBound = -1;
+                upperBound = 0;
+            }
+        }
+        else
+        {
+            lowerBound = ~index - 1;
+            upperBound = lowerBound + 1;
+        }
+
+        if (upperBound == 0)
+        {
+            return LocationPoints[timeList.First()].HorizontalAccuracy;
+        }
+        else if (upperBound >= LocationPoints.Count)
+        {
+            return LocationPoints[timeList.Last()].HorizontalAccuracy;
+        }
+        else
+        {
+            var lowerTime = timeList[lowerBound];
+            var upperTime = timeList[upperBound];
+
+            if (Mathf.Abs(currentTime - lowerTime) < Mathf.Abs(currentTime - upperTime))
+                return LocationPoints[lowerTime].HorizontalAccuracy;
+            else
+                return LocationPoints[upperTime].HorizontalAccuracy;
+        }
+    }
 }
 
 [Serializable]
@@ -540,7 +592,11 @@ class ServerNearestReplayLocationProvider : NearestReplayLocationProvider
                 {
                     LocationPoints.Add(location.Time, new LocationPoint
                     {
-                        Altitude = location.Altitude, Latitude = location.Latitude, Longitude = location.Longitude, TrueHeading = location.TrueHeading
+                        Altitude = location.Altitude,
+                        Latitude = location.Latitude,
+                        Longitude = location.Longitude,
+                        TrueHeading = location.TrueHeading,
+                        HorizontalAccuracy = location.HorizontalAccuracy
                     });
                 }
                 StartTime = Time.time;
