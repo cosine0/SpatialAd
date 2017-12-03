@@ -95,12 +95,12 @@ public class MainBehaviour : MonoBehaviour
 
     private void Start()
     {
-        _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
-        {
-            {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}}
-            //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
-        });
-        //_location = UnityLocationProvider.Instance;
+        //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+        //{
+        //    {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}}
+        //    //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+        //});
+        _location = UnityLocationProvider.Instance;
 
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
         _clientInfo = GameObject.FindGameObjectWithTag("ClientInfo").GetComponent<ClientInfo>();
@@ -306,13 +306,26 @@ public class MainBehaviour : MonoBehaviour
         {
             foreach (var ar3dObject in _ar3dObjects.Values)
             {
-                //ar3dObject.GameObj.transform.Translate(moveAmount, Space.World);
-                ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
-                ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
+                if (ar3dObject.ObjectType != ArObjectType.ArComment)
+                {
+                    var multiple = 2;
+                    ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount * multiple;
+                    ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount * multiple;
+                    if (!moveAmount.Equals(Vector3.zero))
+                        ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude * multiple / Constants.GpsMeasureIntervalInSecond;
+                }
+                else
+                {
+                    //ar3dObject.GameObj.transform.Translate(moveAmount, Space.World);
+                    ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
+                    ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
+                    if (!moveAmount.Equals(Vector3.zero))
+                        ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude / Constants.GpsMeasureIntervalInSecond;
+                }
+
                 //ar3dObject.GameObj.transform.position = Vector3.Lerp(ar3dObject.GameObj.transform.position, ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition
                 //    , Constants.LerpFactor);
-                if (!moveAmount.Equals(Vector3.zero))
-                    ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude / Constants.GpsMeasureIntervalInSecond;
+
                 ar3dObject.GameObj.transform.position = Vector3.MoveTowards(ar3dObject.GameObj.transform.position, ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition, ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance * Time.deltaTime);
             }
         }
