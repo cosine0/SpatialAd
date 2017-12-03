@@ -115,8 +115,8 @@ public class MainBehaviour : MonoBehaviour
         //    {50.0f, new LocationPoint{Latitude = 37.450700f - 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
         //    {70.0f, new LocationPoint{Latitude = 37.450700f + 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}}
         //});
-        // _location = UnityLocationProvider.Instance;
-        _location = new ServerNearestReplayLocationProvider(42);
+        //_location = new ServerNearestReplayLocationProvider(42);
+        _location = UnityLocationProvider.Instance;
 
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
         _clientInfo = GameObject.FindGameObjectWithTag("ClientInfo").GetComponent<ClientInfo>();
@@ -332,13 +332,26 @@ public class MainBehaviour : MonoBehaviour
         {
             foreach (var ar3dObject in _ar3dObjects.Values)
             {
-                //ar3dObject.GameObj.transform.Translate(moveAmount, Space.World);
-                ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
-                ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
+                if (ar3dObject.ObjectType != ArObjectType.ArComment)
+                {
+                    var multiple = 2;
+                    ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount * multiple;
+                    ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount * multiple;
+                    if (!moveAmount.Equals(Vector3.zero))
+                        ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude * multiple / Constants.GpsMeasureIntervalInSecond;
+                }
+                else
+                {
+                    //ar3dObject.GameObj.transform.Translate(moveAmount, Space.World);
+                    ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
+                    ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
+                    if (!moveAmount.Equals(Vector3.zero))
+                        ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude / Constants.GpsMeasureIntervalInSecond;
+                }
+
                 //ar3dObject.GameObj.transform.position = Vector3.Lerp(ar3dObject.GameObj.transform.position, ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition
                 //    , Constants.LerpFactor);
-                if (!moveAmount.Equals(Vector3.zero))
-                    ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude / Constants.GpsMeasureIntervalInSecond;
+
                 ar3dObject.GameObj.transform.position = Vector3.MoveTowards(ar3dObject.GameObj.transform.position, ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition, ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance * Time.deltaTime);
             }
         }
@@ -391,10 +404,20 @@ public class MainBehaviour : MonoBehaviour
             }
 
             _clientInfo.LastGpsMeasureTime = Time.time;
+
+            // 필터링 안함
+            //_clientInfo.CurrentLatitude = _location.GetLatitude();
+            //_clientInfo.CurrentLongitude = _location.GetLongitude();
+            //_clientInfo.CurrentAltitude = _location.GetAltitude();
+
+            //필터링
+            // invalid value filter
             if (Input.location.lastData.horizontalAccuracy < 10)
             {
                 _clientInfo.WalkSpeed = GpsCalulator.DistanceCalculate(_clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude
                     , _location.GetLatitude(), _location.GetLongitude()) / 0.3f;
+
+                //statistical filter
                 if ((int)_clientInfo.WalkSpeed < 10)
                 {
                     // DontDestroyOnLoad 오브젝트인 _clientInfo의 현재 위치 업데이트
@@ -491,7 +514,6 @@ public class MainBehaviour : MonoBehaviour
                 form.AddField("altitude", altitude);
                 form.AddField("latitudeOption", latitudeOption);
                 form.AddField("longitudeOption", longitudeOption);
-                Tools.pivotMode = PivotMode.Pivot;
 
                 // 2d 오브젝트 목록 가져오기: GPS 정보를 서버에 POST
                 using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/getGPS_distance.php", form))
