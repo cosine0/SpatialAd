@@ -95,12 +95,12 @@ public class MainBehaviour : MonoBehaviour
 
     private void Start()
     {
-        //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
-        //{
-        //    {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}},
-        //    {100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
-        //});
-        _location = UnityLocationProvider.Instance;
+        _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+        {
+            {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}}
+            //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+        });
+        //_location = UnityLocationProvider.Instance;
 
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
         _clientInfo = GameObject.FindGameObjectWithTag("ClientInfo").GetComponent<ClientInfo>();
@@ -221,7 +221,7 @@ public class MainBehaviour : MonoBehaviour
             _clientInfo.StartingAltitude
             + "\nGPS: " + _clientInfo.CurrentLatitude + ", " + _clientInfo.CurrentLongitude + ", " +
             _clientInfo.CurrentAltitude
-            + "\nFPS: " + 1.0f / Time.deltaTime
+            + "\nWalkSpeed: " + _clientInfo.WalkSpeed
             + "\nHorizontal accuracy: " + Input.location.lastData.horizontalAccuracy
             + "\ncamera position: " + _clientInfo.MainCamera.transform.position
             + "\ncamera angle: " + _clientInfo.MainCamera.transform.eulerAngles
@@ -285,9 +285,8 @@ public class MainBehaviour : MonoBehaviour
             arPlane.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
             //arPlane.GameObj.transform.Translate(moveAmount, Space.World);
             //arPlane.GameObj.transform.position = Vector3.Lerp(arPlane.GameObj.transform.position, arPlane.GameObj.GetComponent<DataContainer>().TargetPosition, Constants.LerpFactor);
-            //arPlane.GameObj.transform.position = Vector3.Lerp(arPlane.GameObj.transform.position, arPlane.GameObj.GetComponent<DataContainer>().TargetPosition, Time.deltaTime / 0.3f);
             if (!moveAmount.Equals(Vector3.zero))
-                arPlane.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude / 0.3f;
+                arPlane.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude / Constants.GpsMeasureIntervalInSecond;
             arPlane.GameObj.transform.position = Vector3.MoveTowards(arPlane.GameObj.transform.position, arPlane.GameObj.GetComponent<DataContainer>().TargetPosition, arPlane.GameObj.GetComponent<DataContainer>().MaxDistance * Time.deltaTime);
 
             if (_clientInfo.CommentViewOption && (arPlane.CommentCanvas != null))
@@ -295,8 +294,11 @@ public class MainBehaviour : MonoBehaviour
                 {
                     //arPlane.CommentCanvas.GameObj.transform.Translate(moveAmount, Space.World);
                     arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
-                    arPlane.CommentCanvas.GameObj.transform.position = Vector3.Lerp(arPlane.CommentCanvas.GameObj.transform.position
-                        , arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().TargetPosition, Constants.LerpFactor);
+                    //arPlane.CommentCanvas.GameObj.transform.position = Vector3.Lerp(arPlane.CommentCanvas.GameObj.transform.position
+                    //    , arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().TargetPosition, Constants.LerpFactor);
+                    if (!moveAmount.Equals(Vector3.zero))
+                        arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude / Constants.GpsMeasureIntervalInSecond;
+                    arPlane.CommentCanvas.GameObj.transform.position = Vector3.MoveTowards(arPlane.CommentCanvas.GameObj.transform.position, arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().TargetPosition, arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().MaxDistance * Time.deltaTime);
                 }
         }
 
@@ -307,8 +309,11 @@ public class MainBehaviour : MonoBehaviour
                 //ar3dObject.GameObj.transform.Translate(moveAmount, Space.World);
                 ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
                 ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
-                ar3dObject.GameObj.transform.position = Vector3.Lerp(ar3dObject.GameObj.transform.position, ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition
-                    , Constants.LerpFactor);
+                //ar3dObject.GameObj.transform.position = Vector3.Lerp(ar3dObject.GameObj.transform.position, ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition
+                //    , Constants.LerpFactor);
+                if (!moveAmount.Equals(Vector3.zero))
+                    ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude / Constants.GpsMeasureIntervalInSecond;
+                ar3dObject.GameObj.transform.position = Vector3.MoveTowards(ar3dObject.GameObj.transform.position, ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition, ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance * Time.deltaTime);
             }
         }
 
@@ -360,18 +365,34 @@ public class MainBehaviour : MonoBehaviour
             }
 
             _clientInfo.LastGpsMeasureTime = Time.time;
-
-            // DontDestroyOnLoad 오브젝트인 _clientInfo의 현재 위치 업데이트
-            _clientInfo.CurrentLatitude = _location.GetLatitude();
-            _clientInfo.CurrentLongitude = _location.GetLongitude();
-            _clientInfo.CurrentAltitude = _location.GetAltitude();
+            if (Input.location.lastData.horizontalAccuracy < 10)
+            {
+                _clientInfo.WalkSpeed = GpsCalulator.DistanceCalculate(_clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude
+                    , _location.GetLatitude(), _location.GetLongitude()) / 0.3f;
+                if ((int)_clientInfo.WalkSpeed < 10)
+                {
+                    // DontDestroyOnLoad 오브젝트인 _clientInfo의 현재 위치 업데이트
+                    _clientInfo.CurrentLatitude = _location.GetLatitude();
+                    _clientInfo.CurrentLongitude = _location.GetLongitude();
+                    _clientInfo.CurrentAltitude = _location.GetAltitude();
+                }
+            }
+            else
+            {
+                // current data 갱신 안함.
+            }
             
             // 초기 위치 정보 저장
             if (!_clientInfo.OriginalValuesAreSet)
             {
-                _clientInfo.StartingLatitude = _clientInfo.CurrentLatitude;
-                _clientInfo.StartingLongitude = _clientInfo.CurrentLongitude;
-                _clientInfo.StartingAltitude = _clientInfo.CurrentAltitude;
+                yield return new WaitUntil(() => (Input.location.lastData.horizontalAccuracy < 10));
+
+                _clientInfo.StartingLatitude = _location.GetLatitude();
+                _clientInfo.StartingLongitude = _location.GetLongitude();
+                _clientInfo.StartingAltitude = _location.GetAltitude();
+                _clientInfo.CurrentLatitude = _location.GetLatitude();
+                _clientInfo.CurrentLongitude = _location.GetLongitude();
+                _clientInfo.CurrentAltitude = _location.GetAltitude();
                 _clientInfo.CorrectedBearingOffset = _location.GetTrueHeading();
 
                 _clientInfo.OriginalValuesAreSet = true;
@@ -412,17 +433,17 @@ public class MainBehaviour : MonoBehaviour
                 string longitudeOption;
                 if (_clientInfo.DistanceOption == 1)
                 {
-                    latitudeOption = "0.0002";
+                    latitudeOption = "0.0001";
                     longitudeOption = "0.0001";
                 }
                 else if (_clientInfo.DistanceOption == 2)
                 {
-                    latitudeOption = "0.0004";
+                    latitudeOption = "0.0002";
                     longitudeOption = "0.0002";
                 }
                 else
                 {
-                    latitudeOption = "0.0006";
+                    latitudeOption = "0.0003";
                     longitudeOption = "0.0003";
                 }
 
@@ -548,17 +569,17 @@ public class MainBehaviour : MonoBehaviour
                 string longitudeOption;
                 if (_clientInfo.DistanceOption == 1)
                 {
-                    latitudeOption = "0.0002";
+                    latitudeOption = "0.0001";
                     longitudeOption = "0.0001";
                 }
                 else if (_clientInfo.DistanceOption == 2)
                 {
-                    latitudeOption = "0.0004";
+                    latitudeOption = "0.0002";
                     longitudeOption = "0.0002";
                 }
                 else
                 {
-                    latitudeOption = "0.0006";
+                    latitudeOption = "0.0003";
                     longitudeOption = "0.0003";
                 }
 
