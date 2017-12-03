@@ -988,6 +988,14 @@ public class MainBehaviour : MonoBehaviour
         //createObject("horse", 40, -1, 0);
     }
 
+    public void onClickMoneyBtn()
+    {
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude, 0);
+        //Vector3 unityPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude, _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, 37.31263f, 126.8481f, 0);
+        createObject("money", unityPosition);
+        //createObject("horse", 40, -1, 0);
+    }
+
     public void createObject(string typeName, Vector3 unityPosition)
     {
         string x = _clientInfo.CurrentLatitude.ToString();
