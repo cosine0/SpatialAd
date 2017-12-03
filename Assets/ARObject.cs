@@ -269,8 +269,6 @@ public class ArPlane : ArObject
                 // ad plane의 scale 이 1보다 작을 경우 commentcanvas scale링 필요할 것으로 보임
 
                 // local space 기준 기동
-                //Vector3 movement = new Vector3((this.GameObj.transform.localScale.x * 5.0f + (CommentCanvas.GameObj.transform.localScale.x * 500)) + 1,
-                //    (this.GameObj.transform.localScale.y - (CommentCanvas.GameObj.transform.localScale.y * 100)) * 5.0f, 0.0f);
                 Vector3 movement = new Vector3((this.GameObj.transform.localScale.x * 5.0f + (CommentCanvas.GameObj.transform.localScale.x * 500)) + 0.2f,
                     (this.GameObj.transform.localScale.y - (CommentCanvas.GameObj.transform.localScale.y * 100)) * 5.0f, 0.0f);
 

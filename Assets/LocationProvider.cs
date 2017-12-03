@@ -15,6 +15,7 @@ abstract class LocationProvider
     public abstract float GetLongitude();
     public abstract float GetAltitude();
     public abstract float GetTrueHeading();
+    public abstract float GetHorizontalAccuracy();
 }
 
 class UnityLocationProvider : LocationProvider
@@ -55,6 +56,11 @@ class UnityLocationProvider : LocationProvider
     public override float GetTrueHeading()
     {
         return Input.compass.trueHeading;
+    }
+
+    public override float GetHorizontalAccuracy()
+    {
+        return Input.location.lastData.horizontalAccuracy;
     }
 }
 
