@@ -95,12 +95,12 @@ public class MainBehaviour : MonoBehaviour
 
     private void Start()
     {
-        //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
-        //{
-        //    {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}}
-        //    //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
-        //});
-        _location = UnityLocationProvider.Instance;
+        _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+        {
+            {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}}
+            //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+        });
+        //_location = UnityLocationProvider.Instance;
 
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
         _clientInfo = GameObject.FindGameObjectWithTag("ClientInfo").GetComponent<ClientInfo>();
@@ -385,6 +385,8 @@ public class MainBehaviour : MonoBehaviour
             // 초기 위치 정보 저장
             if (!_clientInfo.OriginalValuesAreSet)
             {
+                yield return new WaitUntil(() => (Input.location.lastData.horizontalAccuracy < 10));
+
                 _clientInfo.StartingLatitude = _location.GetLatitude();
                 _clientInfo.StartingLongitude = _location.GetLongitude();
                 _clientInfo.StartingAltitude = _location.GetAltitude();
@@ -431,17 +433,17 @@ public class MainBehaviour : MonoBehaviour
                 string longitudeOption;
                 if (_clientInfo.DistanceOption == 1)
                 {
-                    latitudeOption = "0.0002";
+                    latitudeOption = "0.0001";
                     longitudeOption = "0.0001";
                 }
                 else if (_clientInfo.DistanceOption == 2)
                 {
-                    latitudeOption = "0.0004";
+                    latitudeOption = "0.0002";
                     longitudeOption = "0.0002";
                 }
                 else
                 {
-                    latitudeOption = "0.0006";
+                    latitudeOption = "0.0003";
                     longitudeOption = "0.0003";
                 }
 
@@ -567,17 +569,17 @@ public class MainBehaviour : MonoBehaviour
                 string longitudeOption;
                 if (_clientInfo.DistanceOption == 1)
                 {
-                    latitudeOption = "0.0002";
+                    latitudeOption = "0.0001";
                     longitudeOption = "0.0001";
                 }
                 else if (_clientInfo.DistanceOption == 2)
                 {
-                    latitudeOption = "0.0004";
+                    latitudeOption = "0.0002";
                     longitudeOption = "0.0002";
                 }
                 else
                 {
-                    latitudeOption = "0.0006";
+                    latitudeOption = "0.0003";
                     longitudeOption = "0.0003";
                 }
 
