@@ -95,12 +95,23 @@ public class MainBehaviour : MonoBehaviour
 
     private void Start()
     {
-        //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
-        //{
-        //    {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}}
-        //    //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
-        //});
-        _location = UnityLocationProvider.Instance;
+        if(Application.platform == RuntimePlatform.Android)
+        {
+            _location = UnityLocationProvider.Instance;
+        }
+        else
+        {
+            _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+            {
+                {0, new LocationPoint{Latitude = 37.450590f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 55}}
+                //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+            });
+            //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+            //{
+            //    {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}}
+            //    //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+            //});
+        }
 
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
         _clientInfo = GameObject.FindGameObjectWithTag("ClientInfo").GetComponent<ClientInfo>();

@@ -214,7 +214,7 @@ public class ArPlane : ArObject
             yield return new WaitUntil(() => ClientInfoObj.OriginalValuesAreSet);
 
         // 초기 포지션 설정
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(ClientInfoObj.StartingLatitude, ClientInfoObj.StartingLongitude, ClientInfoObj.StartingAltitude,
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(ClientInfoObj.CurrentLatitude, ClientInfoObj.CurrentLongitude, ClientInfoObj.CurrentAltitude,
             Info.GpsInfo[0], Info.GpsInfo[1], Info.GpsInfo[2]);
 
         unityPosition.y = 0; // 고도 사용 안함.
@@ -379,7 +379,7 @@ public class Ar3dPlane : ArObject
     private IEnumerator CreateObject()
     {
         // 초기 포지션 설정
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(ClientInfoObj.StartingLatitude, ClientInfoObj.StartingLongitude, ClientInfoObj.StartingAltitude,
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(ClientInfoObj.CurrentLatitude, ClientInfoObj.CurrentLongitude, ClientInfoObj.CurrentAltitude,
             Info.GpsInfo[0], Info.GpsInfo[1], Info.GpsInfo[2]);
 
         GameObj = createObject(Info.typeName, unityPosition);
@@ -474,7 +474,7 @@ public class ArComment : ArObject
             yield return new WaitUntil(() => ClientInfoObj.OriginalValuesAreSet);
 
         // 초기 포지션 설정
-        Vector3 unityPosition = GpsCalulator.CoordinateDifference(ClientInfoObj.StartingLatitude, ClientInfoObj.StartingLongitude, ClientInfoObj.StartingAltitude,
+        Vector3 unityPosition = GpsCalulator.CoordinateDifference(ClientInfoObj.CurrentLatitude, ClientInfoObj.CurrentLongitude, ClientInfoObj.CurrentAltitude,
             _commentData.latitude, _commentData.longitude, _commentData.altitude);
         unityPosition.y = 0; // 고도 사용 안함.
        
@@ -493,7 +493,6 @@ public class ArComment : ArObject
 
     public override void Create()
     {
-        ObjectType = ArObjectType.ArComment;
         StaticCoroutine.DoCoroutine(CreateObject());
     }
 
