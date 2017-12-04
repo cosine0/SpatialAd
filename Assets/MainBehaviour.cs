@@ -103,7 +103,14 @@ public class MainBehaviour : MonoBehaviour
         {
             _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             {
-                {0, new LocationPoint{Latitude = 37.450590f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 55}}
+                {0, new LocationPoint{Latitude = 37.450993f, Longitude = 126.657054f, Altitude = 0, TrueHeading = 0}},
+                {3, new LocationPoint{Latitude = 37.451106f, Longitude = 126.657124f, Altitude = 0, TrueHeading = 0}},
+                {6, new LocationPoint{Latitude = 37.450993f, Longitude = 126.657054f, Altitude = 0, TrueHeading = 0}},
+                {9, new LocationPoint{Latitude = 37.451106f, Longitude = 126.657124f, Altitude = 0, TrueHeading = 0}},
+                {12, new LocationPoint{Latitude = 37.450993f, Longitude = 126.657054f, Altitude = 0, TrueHeading = 0}},
+                {15, new LocationPoint{Latitude = 37.451106f, Longitude = 126.657124f, Altitude = 0, TrueHeading = 0}},
+                {18, new LocationPoint{Latitude = 37.450993f, Longitude = 126.657054f, Altitude = 0, TrueHeading = 0}},
+                {21, new LocationPoint{Latitude = 37.451106f, Longitude = 126.657124f, Altitude = 0, TrueHeading = 0}},
             });
             //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             //{

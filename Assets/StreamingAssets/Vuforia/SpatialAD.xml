@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
   <Tracking>
+    <ImageTarget name="death_note" size="0.250000 0.187500" />
+    <ImageTarget name="batman" size="0.250000 0.147635" />
+    <ImageTarget name="ironman" size="0.250000 0.250000" />
+    <ImageTarget name="v_for_vendetta" size="0.250000 0.280909" />
     <ImageTarget name="yukssam" size="2.000000 0.439024" />
     <ImageTarget name="wannachu" size="2.000000 0.509395" />
     <ImageTarget name="ogenki" size="1.500000 0.383404" />
