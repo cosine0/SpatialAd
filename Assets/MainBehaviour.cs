@@ -104,7 +104,6 @@ public class MainBehaviour : MonoBehaviour
             _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             {
                 {0, new LocationPoint{Latitude = 37.450590f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 55}}
-                //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
             });
             //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             //{
@@ -419,18 +418,18 @@ public class MainBehaviour : MonoBehaviour
             }
 
             _clientInfo.LastGpsMeasureTime = Time.time;
-
+            
             // 필터링 안함
             //_clientInfo.CurrentLatitude = _location.GetLatitude();
             //_clientInfo.CurrentLongitude = _location.GetLongitude();
             //_clientInfo.CurrentAltitude = _location.GetAltitude();
 
             //필터링
-            // invalid value filter
+            //invalid value filter
             if (Input.location.lastData.horizontalAccuracy < 10)
             {
-                _clientInfo.WalkSpeed = GpsCalulator.DistanceCalculate(_clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude
-                    , _location.GetLatitude(), _location.GetLongitude()) / 0.3f;
+                _clientInfo.WalkSpeed = GpsCalulator.DistanceCalculate(_clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude,
+                _location.GetLatitude(), _location.GetLongitude()) / 0.3f;
 
                 //statistical filter
                 if ((int)_clientInfo.WalkSpeed < 10)
@@ -445,7 +444,7 @@ public class MainBehaviour : MonoBehaviour
             {
                 // current data 갱신 안함.
             }
-            
+
             // 초기 위치 정보 저장
             if (!_clientInfo.OriginalValuesAreSet)
             {

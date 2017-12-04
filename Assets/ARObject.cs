@@ -485,6 +485,7 @@ public class ArComment : ArObject
         GameObj.transform.position = unityPosition;
         GameObj.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
         GameObj.GetComponent<DataContainer>().TargetPosition = unityPosition;
+        GameObj.GetComponent<DataContainer>().ObjectType = ArObjectType.ArComment;
         GameObj.transform.eulerAngles = new Vector3(0, _commentData.bearing, 0);
 
         GameObj.transform.GetChild(0).GetChild(0).GetComponent<Text>().text = _commentData.content;
@@ -494,6 +495,7 @@ public class ArComment : ArObject
 
     public override void Create()
     {
+        ObjectType = ArObjectType.ArComment;
         StaticCoroutine.DoCoroutine(CreateObject());
     }
 

@@ -1,16 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
   <Tracking>
-    <ImageTarget name="door" size="1.000000 1.333333" />
-    <ImageTarget name="switch" size="1.000000 0.750000" />
-    <ImageTarget name="curtain" size="1.000000 1.333333" />
-    <ImageTarget name="window_drawing" size="1.000000 0.750000" />
-    <ImageTarget name="star_drawing" size="1.000000 0.750000" />
-    <ImageTarget name="speaker" size="1.000000 0.750000" />
-    <ImageTarget name="window" size="1.000000 1.333333" />
-    <ImageTarget name="hook" size="1.000000 0.750000" />
+    <ImageTarget name="yukssam" size="2.000000 0.439024" />
+    <ImageTarget name="wannachu" size="2.000000 0.509395" />
+    <ImageTarget name="ogenki" size="1.500000 0.383404" />
+    <ImageTarget name="steakboss" size="2.000000 0.565774" />
+    <ImageTarget name="dambyeorak" size="1.500000 0.580931" />
     <ImageTarget name="chicken" size="10.000000 5.625000" />
-    <ImageTarget name="google_banner_marker" size="1.000000 1.000000" />
-    <ImageTarget name="naver_banner_marker" size="1.000000 1.000000" />
   </Tracking>
 </QCARConfig>
