@@ -4,9 +4,14 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 public class ArCommentInputBehaviour : MonoBehaviour {
-    public UserInfo _userInfo;
-    public ClientInfo _clientInfo;
-    public InputField _comment;
+    private UserInfo _userInfo;
+    private ClientInfo _clientInfo;
+    public InputField Comment;
+
+    public ArCommentInputBehaviour(InputField comment)
+    {
+        Comment = comment;
+    }
 
     private void Start()
     {
@@ -26,7 +31,7 @@ public class ArCommentInputBehaviour : MonoBehaviour {
 
     public void CancelInput()
     {
-        _comment.text = "";
+        Comment.text = "";
         HideCommentInputCanvas();
     }
 
@@ -37,8 +42,8 @@ public class ArCommentInputBehaviour : MonoBehaviour {
         //CommentObject.transform.eulerAngles = new Vector3(0.0f, _clientInfo.CurrentBearing, 0.0f);
         //CommentObject.transform.localScale = new Vector3(0.005f, 0.005f, 0.005f);
 
-        if (_comment.text.Length > 40)
-            _comment.text = _comment.text.Remove(40);
+        if (Comment.text.Length > 40)
+            Comment.text = Comment.text.Remove(40);
 
         StartCoroutine(CommitArComment());
     }
@@ -48,7 +53,7 @@ public class ArCommentInputBehaviour : MonoBehaviour {
         WWWForm form = new WWWForm();
         form.AddField("typeName", "comment");
         form.AddField("user", _userInfo.UserId);
-        form.AddField("content", _comment.text);
+        form.AddField("content", Comment.text);
         form.AddField("latitude", _clientInfo.CurrentLatitude.ToString());
         form.AddField("longitude", _clientInfo.CurrentLongitude.ToString());
         form.AddField("altitude", _clientInfo.CurrentAltitude.ToString());
@@ -64,7 +69,7 @@ public class ArCommentInputBehaviour : MonoBehaviour {
                 Debug.Log(www.error);
             }
         }
-        _comment.text = "";
+        Comment.text = "";
         HideCommentInputCanvas();
     }
 

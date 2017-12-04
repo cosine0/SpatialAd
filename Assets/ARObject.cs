@@ -480,6 +480,7 @@ public class ArComment : ArObject
        
         // Create Object
         GameObj = MonoBehaviour.Instantiate(Resources.Load("Prefabs/ArComment") as GameObject) as GameObject;
+        GameObj.name = "comment";
         GameObj.AddComponent<DataContainer>().CreatedCameraPosition = Vector3.zero;
         GameObj.transform.position = unityPosition;
         GameObj.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);

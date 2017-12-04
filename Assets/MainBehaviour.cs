@@ -111,6 +111,26 @@ public class MainBehaviour : MonoBehaviour
             //    {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}}
             //    //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
             //});
+            //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+            //{
+            //    {10.0f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
+            //    {10.1f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 270}},
+            //    {20.0f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f - 0.0002f, Altitude = 0, TrueHeading = 270}},
+            //    {20.1f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f - 0.0002f, Altitude = 0, TrueHeading = 180}},
+            //    {30.0f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f - 0.0002f, Altitude = 0, TrueHeading = 180}},
+            //    {30.1f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f - 0.0002f, Altitude = 0, TrueHeading = 180}},
+            //    {40.0f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 90}},
+            //    {40.1f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}}
+            //});
+            //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+            //{
+            //    {0.0f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
+            //    {10.0f, new LocationPoint{Latitude = 37.450700f - 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
+            //    {30.0f, new LocationPoint{Latitude = 37.450700f + 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
+            //    {50.0f, new LocationPoint{Latitude = 37.450700f - 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
+            //    {70.0f, new LocationPoint{Latitude = 37.450700f + 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}}
+            //});
+            //_location = new ServerNearestReplayLocationProvider(42);
         }
 
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
@@ -148,6 +168,16 @@ public class MainBehaviour : MonoBehaviour
             {
                 if (arObject.ObjectType == ArObjectType.AdPlane)
                     arObject.Update();
+            }
+        }
+
+        foreach (var ar3DObject in _ar3dObjects.Values)
+        {
+            if (ar3DObject.GameObj.name == "comment")
+            {
+                var rotation = Quaternion.LookRotation(_clientInfo.MainCamera.transform.position - ar3DObject.GameObj.transform.position).eulerAngles;
+                rotation.y += 180;
+                ar3DObject.GameObj.transform.eulerAngles = rotation;
             }
         }
 
@@ -288,7 +318,7 @@ public class MainBehaviour : MonoBehaviour
 
         // 물체를 카메라의 이동 반대방향으로 옮기기
         Vector3 moveAmount = _lastUserPosition - currentUserPosition;
-        
+
         foreach (var arObject in _arObjects.Values)
         {
             var arPlane = (ArPlane)arObject;
@@ -582,7 +612,7 @@ public class MainBehaviour : MonoBehaviour
         if (Application.platform == RuntimePlatform.Android)
             if (!_clientInfo.OriginalValuesAreSet)
                 yield return new WaitUntil(() => _clientInfo.OriginalValuesAreSet);
-                
+
         yield return new WaitUntil(() => _clientInfo.Object3dViewOption);
 
         while (true)
@@ -716,6 +746,7 @@ public class MainBehaviour : MonoBehaviour
     /// <param name="intervalInSecond">초 단위 수집 간격</param>
     private IEnumerator CollectBearingDifference(float intervalInSecond = 2.0f)
     {
+        yield return new WaitUntil(() => _clientInfo.OriginalValuesAreSet && _location.Status() == LocationServiceStatus.Running);
         while (true)
         {
             var gyroAngles = _clientInfo.MainCamera.transform.eulerAngles;
@@ -888,7 +919,7 @@ public class MainBehaviour : MonoBehaviour
         AndroidJavaClass location = new AndroidJavaClass("android.location");
         AndroidJavaObject _GnssStatus = location.Get<AndroidJavaObject>("GnssStatus");
         int _satelliteCount = _GnssStatus.Call<int>("getSatelliteCount");
-        
+
         for (int i = 0; i < _satelliteCount; i++)
         {
             if (_GnssStatus.Call<bool>("usedInFix", i))
