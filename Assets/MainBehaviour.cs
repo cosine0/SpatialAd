@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System;
 using System.Collections;
 using System.Linq;
-using UnityEditor;
 using UnityEngine.UI;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;

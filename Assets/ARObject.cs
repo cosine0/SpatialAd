@@ -494,7 +494,6 @@ public class ArComment : ArObject
 
     public override void Create()
     {
-        ObjectType = ArObjectType.ArComment;
         StaticCoroutine.DoCoroutine(CreateObject());
     }
 
