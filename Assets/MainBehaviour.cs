@@ -96,27 +96,34 @@ public class MainBehaviour : MonoBehaviour
 
     private void Start()
     {
-        //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
-        //{
-        //    {10.0f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
-        //    {10.1f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 270}},
-        //    {20.0f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f - 0.0002f, Altitude = 0, TrueHeading = 270}},
-        //    {20.1f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f - 0.0002f, Altitude = 0, TrueHeading = 180}},
-        //    {30.0f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f - 0.0002f, Altitude = 0, TrueHeading = 180}},
-        //    {30.1f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f - 0.0002f, Altitude = 0, TrueHeading = 180}},
-        //    {40.0f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 90}},
-        //    {40.1f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}}
-        //});
-        //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
-        //{
-        //    {0.0f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
-        //    {10.0f, new LocationPoint{Latitude = 37.450700f - 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
-        //    {30.0f, new LocationPoint{Latitude = 37.450700f + 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
-        //    {50.0f, new LocationPoint{Latitude = 37.450700f - 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
-        //    {70.0f, new LocationPoint{Latitude = 37.450700f + 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}}
-        //});
-        //_location = new ServerNearestReplayLocationProvider(42);
-        _location = UnityLocationProvider.Instance;
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            _location = UnityLocationProvider.Instance;
+        }
+        else
+        {
+            //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+            //{
+            //    {0.0f,  new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
+            //    {10.0f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
+            //    //{10.1f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 270}},
+            //    //{20.0f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f - 0.0002f, Altitude = 0, TrueHeading = 270}},
+            //    //{20.1f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f - 0.0002f, Altitude = 0, TrueHeading = 180}},
+            //    //{30.0f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f - 0.0002f, Altitude = 0, TrueHeading = 180}},
+            //    //{30.1f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f - 0.0002f, Altitude = 0, TrueHeading = 180}},
+            //    //{40.0f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 90}},
+            //    //{40.1f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}}
+            //});
+            //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+            //{
+            //    {0.0f, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
+            //    {10.0f, new LocationPoint{Latitude = 37.450700f - 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
+            //    {30.0f, new LocationPoint{Latitude = 37.450700f + 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
+            //    {50.0f, new LocationPoint{Latitude = 37.450700f - 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
+            //    {70.0f, new LocationPoint{Latitude = 37.450700f + 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}}
+            //});
+            _location = new ServerNearestReplayLocationProvider(35);
+        }
 
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
         _clientInfo = GameObject.FindGameObjectWithTag("ClientInfo").GetComponent<ClientInfo>();
@@ -430,7 +437,7 @@ public class MainBehaviour : MonoBehaviour
             {
                 // current data 갱신 안함.
             }
-            
+
             // 초기 위치 정보 저장
             if (!_clientInfo.OriginalValuesAreSet)
             {
