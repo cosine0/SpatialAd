@@ -58,7 +58,6 @@ public class ArCommentInputBehaviour : MonoBehaviour {
         form.AddField("longitude", _clientInfo.CurrentLongitude.ToString());
         form.AddField("altitude", _clientInfo.CurrentAltitude.ToString());
         form.AddField("bearing", _clientInfo.CurrentBearing.ToString());
-        
 
         using (UnityWebRequest www = UnityWebRequest.Post("http://ec2-13-125-7-2.ap-northeast-2.compute.amazonaws.com:31337/capstone/add_3d_comment.php", form))
         {
