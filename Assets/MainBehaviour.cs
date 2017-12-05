@@ -101,15 +101,15 @@ public class MainBehaviour : MonoBehaviour
         }
         else
         {
-            _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
-            {
-                {0, new LocationPoint{Latitude = 37.450590f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 55}}
-            });
             //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             //{
-            //    {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}}
-            //    //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+            //    {0, new LocationPoint{Latitude = 37.450590f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 55}}
             //});
+            _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+            {
+                {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}}
+                //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+            });
             //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             //{
             //    {10.0f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
@@ -418,32 +418,34 @@ public class MainBehaviour : MonoBehaviour
             }
 
             _clientInfo.LastGpsMeasureTime = Time.time;
-            
+
             // 필터링 안함
-            //_clientInfo.CurrentLatitude = _location.GetLatitude();
-            //_clientInfo.CurrentLongitude = _location.GetLongitude();
-            //_clientInfo.CurrentAltitude = _location.GetAltitude();
+            _clientInfo.CurrentLatitude = _location.GetLatitude();
+            _clientInfo.CurrentLongitude = _location.GetLongitude();
+            _clientInfo.CurrentAltitude = _location.GetAltitude();
+            _clientInfo.WalkSpeed = GpsCalulator.DistanceCalculate(_clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude,
+                _location.GetLatitude(), _location.GetLongitude()) / 0.3f;
 
             //필터링
             //invalid value filter
-            if (Input.location.lastData.horizontalAccuracy < 10)
-            {
-                _clientInfo.WalkSpeed = GpsCalulator.DistanceCalculate(_clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude,
-                _location.GetLatitude(), _location.GetLongitude()) / 0.3f;
+            //if (Input.location.lastData.horizontalAccuracy < 10)
+            //{
+            //    _clientInfo.WalkSpeed = GpsCalulator.DistanceCalculate(_clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude,
+            //    _location.GetLatitude(), _location.GetLongitude()) / 0.3f;
 
-                //statistical filter
-                if ((int)_clientInfo.WalkSpeed < 10)
-                {
-                    // DontDestroyOnLoad 오브젝트인 _clientInfo의 현재 위치 업데이트
-                    _clientInfo.CurrentLatitude = _location.GetLatitude();
-                    _clientInfo.CurrentLongitude = _location.GetLongitude();
-                    _clientInfo.CurrentAltitude = _location.GetAltitude();
-                }
-            }
-            else
-            {
-                // current data 갱신 안함.
-            }
+            //    //statistical filter
+            //    if ((int)_clientInfo.WalkSpeed < 10)
+            //    {
+            //        // DontDestroyOnLoad 오브젝트인 _clientInfo의 현재 위치 업데이트
+            //        _clientInfo.CurrentLatitude = _location.GetLatitude();
+            //        _clientInfo.CurrentLongitude = _location.GetLongitude();
+            //        _clientInfo.CurrentAltitude = _location.GetAltitude();
+            //    }
+            //}
+            //else
+            //{
+            //    // current data 갱신 안함.
+            //}
 
             // 초기 위치 정보 저장
             if (!_clientInfo.OriginalValuesAreSet)
@@ -1108,6 +1110,9 @@ public class MainBehaviour : MonoBehaviour
 
     public void TestButton()
     {
-        Debug.Log(EventSystem.current.currentSelectedGameObject.name);
+        if (inAppCanvas.transform.GetChild(0).GetComponent<Text>().color == Color.white)
+            inAppCanvas.transform.GetChild(0).GetComponent<Text>().color = new Color(1, 1, 1, 0);
+        else
+            inAppCanvas.transform.GetChild(0).GetComponent<Text>().color = new Color(1, 1, 1, 1);
     }
 }
