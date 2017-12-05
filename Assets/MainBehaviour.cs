@@ -1115,6 +1115,9 @@ public class MainBehaviour : MonoBehaviour
 
     public void TestButton()
     {
-        Debug.Log(EventSystem.current.currentSelectedGameObject.name);
+        if (inAppCanvas.transform.GetChild(0).GetComponent<Text>().color == Color.white)
+            inAppCanvas.transform.GetChild(0).GetComponent<Text>().color = new Color(1, 1, 1, 0);
+        else
+            inAppCanvas.transform.GetChild(0).GetComponent<Text>().color = new Color(1, 1, 1, 1);
     }
 }
