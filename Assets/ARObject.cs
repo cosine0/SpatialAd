@@ -429,8 +429,7 @@ public class Ar3dPlane : ArObject
 }
 
 public class ArCommentCanvas : ArObject
-{
-
+{   
     public ArCommentCanvas(GameObject obj)
     {
         Create();

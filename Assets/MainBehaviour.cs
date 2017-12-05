@@ -107,8 +107,8 @@ public class MainBehaviour : MonoBehaviour
             //});
             _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             {
-                {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}}
-                //{100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+                {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}},
+                {100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
             });
             //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             //{
@@ -323,7 +323,6 @@ public class MainBehaviour : MonoBehaviour
             var arPlane = (ArPlane)arObject;
             arPlane.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
             arPlane.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
-            //arPlane.GameObj.transform.Translate(moveAmount, Space.World);
             //arPlane.GameObj.transform.position = Vector3.Lerp(arPlane.GameObj.transform.position, arPlane.GameObj.GetComponent<DataContainer>().TargetPosition, Constants.LerpFactor);
             if (!moveAmount.Equals(Vector3.zero))
                 arPlane.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude / Constants.GpsMeasureIntervalInSecond;
@@ -333,12 +332,22 @@ public class MainBehaviour : MonoBehaviour
                 if (arPlane.CommentCanvas.IsCreateComplete)
                 {
                     //arPlane.CommentCanvas.GameObj.transform.Translate(moveAmount, Space.World);
-                    arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
+                    //arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
+                    Vector3 movement = new Vector3((arPlane.GameObj.transform.localScale.x * 5.0f + (arPlane.CommentCanvas.GameObj.transform.localScale.x * 500)) + 0.2f,
+                    (arPlane.GameObj.transform.localScale.y - (arPlane.CommentCanvas.GameObj.transform.localScale.y * 100)) * 5.0f, 0.0f);
+                    GameObject tmpGameObj = new GameObject();
+                    tmpGameObj.transform.localEulerAngles = arPlane.CommentCanvas.GameObj.transform.localEulerAngles;
+                    tmpGameObj.transform.position = arPlane.GameObj.transform.position;
+                    tmpGameObj.transform.Translate(movement, Space.Self);
+
+                    arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().TargetPosition = tmpGameObj.transform.position;
+                    MonoBehaviour.Destroy(tmpGameObj);
                     //arPlane.CommentCanvas.GameObj.transform.position = Vector3.Lerp(arPlane.CommentCanvas.GameObj.transform.position
                     //    , arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().TargetPosition, Constants.LerpFactor);
                     if (!moveAmount.Equals(Vector3.zero))
                         arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude / Constants.GpsMeasureIntervalInSecond;
-                    arPlane.CommentCanvas.GameObj.transform.position = Vector3.MoveTowards(arPlane.CommentCanvas.GameObj.transform.position, arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().TargetPosition, arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().MaxDistance * Time.deltaTime);
+                    arPlane.CommentCanvas.GameObj.transform.position = Vector3.MoveTowards(arPlane.CommentCanvas.GameObj.transform.position,
+                        arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().TargetPosition, arPlane.CommentCanvas.GameObj.GetComponent<DataContainer>().MaxDistance * Time.deltaTime);
                 }
         }
 
@@ -351,22 +360,26 @@ public class MainBehaviour : MonoBehaviour
                     var multiple = 2;
                     ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount * multiple;
                     ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount * multiple;
-                    if (!moveAmount.Equals(Vector3.zero))
-                        ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude * multiple / Constants.GpsMeasureIntervalInSecond;
+                    //if (!moveAmount.Equals(Vector3.zero))
+                    //    ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude * multiple / Constants.GpsMeasureIntervalInSecond;
+                    ar3dObject.GameObj.transform.position = Vector3.Lerp(ar3dObject.GameObj.transform.position, ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition
+                        , Constants.LerpFactor);
                 }
                 else
                 {
                     //ar3dObject.GameObj.transform.Translate(moveAmount, Space.World);
                     ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount;
                     ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount;
-                    if (!moveAmount.Equals(Vector3.zero))
-                        ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude / Constants.GpsMeasureIntervalInSecond;
+                    //if (!moveAmount.Equals(Vector3.zero))
+                    //    ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance = moveAmount.magnitude / Constants.GpsMeasureIntervalInSecond;
+                    ar3dObject.GameObj.transform.position = Vector3.Lerp(ar3dObject.GameObj.transform.position, ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition
+                        , Constants.LerpFactor);
                 }
 
                 //ar3dObject.GameObj.transform.position = Vector3.Lerp(ar3dObject.GameObj.transform.position, ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition
                 //    , Constants.LerpFactor);
 
-                ar3dObject.GameObj.transform.position = Vector3.MoveTowards(ar3dObject.GameObj.transform.position, ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition, ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance * Time.deltaTime);
+                //ar3dObject.GameObj.transform.position = Vector3.MoveTowards(ar3dObject.GameObj.transform.position, ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition, ar3dObject.GameObj.GetComponent<DataContainer>().MaxDistance * Time.deltaTime);
             }
         }
 
@@ -420,32 +433,32 @@ public class MainBehaviour : MonoBehaviour
             _clientInfo.LastGpsMeasureTime = Time.time;
 
             // 필터링 안함
-            _clientInfo.CurrentLatitude = _location.GetLatitude();
-            _clientInfo.CurrentLongitude = _location.GetLongitude();
-            _clientInfo.CurrentAltitude = _location.GetAltitude();
-            _clientInfo.WalkSpeed = GpsCalulator.DistanceCalculate(_clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude,
-                _location.GetLatitude(), _location.GetLongitude()) / 0.3f;
+            //_clientInfo.CurrentLatitude = _location.GetLatitude();
+            //_clientInfo.CurrentLongitude = _location.GetLongitude();
+            //_clientInfo.CurrentAltitude = _location.GetAltitude();
+            //_clientInfo.WalkSpeed = GpsCalulator.DistanceCalculate(_clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude,
+            //    _location.GetLatitude(), _location.GetLongitude()) / 0.3f;
 
             //필터링
             //invalid value filter
-            //if (Input.location.lastData.horizontalAccuracy < 10)
-            //{
-            //    _clientInfo.WalkSpeed = GpsCalulator.DistanceCalculate(_clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude,
-            //    _location.GetLatitude(), _location.GetLongitude()) / 0.3f;
+            if (Input.location.lastData.horizontalAccuracy < 10)
+            {
+                _clientInfo.WalkSpeed = GpsCalulator.DistanceCalculate(_clientInfo.CurrentLatitude, _clientInfo.CurrentLongitude,
+                _location.GetLatitude(), _location.GetLongitude()) / 0.3f;
 
-            //    //statistical filter
-            //    if ((int)_clientInfo.WalkSpeed < 10)
-            //    {
-            //        // DontDestroyOnLoad 오브젝트인 _clientInfo의 현재 위치 업데이트
-            //        _clientInfo.CurrentLatitude = _location.GetLatitude();
-            //        _clientInfo.CurrentLongitude = _location.GetLongitude();
-            //        _clientInfo.CurrentAltitude = _location.GetAltitude();
-            //    }
-            //}
-            //else
-            //{
-            //    // current data 갱신 안함.
-            //}
+                //statistical filter
+                if ((int)_clientInfo.WalkSpeed < 10)
+                {
+                    // DontDestroyOnLoad 오브젝트인 _clientInfo의 현재 위치 업데이트
+                    _clientInfo.CurrentLatitude = _location.GetLatitude();
+                    _clientInfo.CurrentLongitude = _location.GetLongitude();
+                    _clientInfo.CurrentAltitude = _location.GetAltitude();
+                }
+            }
+            else
+            {
+                // current data 갱신 안함.
+            }
 
             // 초기 위치 정보 저장
             if (!_clientInfo.OriginalValuesAreSet)
