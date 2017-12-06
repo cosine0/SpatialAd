@@ -95,11 +95,11 @@ public class MainBehaviour : MonoBehaviour
 
     private void Start()
     {
-        if(Application.platform == RuntimePlatform.Android)
-        {
-            _location = UnityLocationProvider.Instance;
-        }
-        else
+//        if(Application.platform == RuntimePlatform.Android)
+//        {
+//            _location = UnityLocationProvider.Instance;
+//        }
+//        else
         {
             _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             {
