@@ -12,6 +12,10 @@ TagManager:
   - OptionInsideOff
   - OptionInsideOn
   - InAppCanvas
+  - OptionRadioButton
+  - OptionUserPoint
+  - OptionVersionInfo
+  - OptionUserName
   layers:
   - Default
   - TransparentFX
