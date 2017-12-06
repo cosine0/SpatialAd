@@ -33,8 +33,9 @@ public class ClientInfo : MonoBehaviour
     public bool InsideOption = false;
     public bool CommentViewOption = true;
     public bool Object3dViewOption = true;
-    public int DistanceOption = 1;
+    public int DistanceOption = 3;
     public string VersionInfo = "1.7";
+
 
 
     public float[] BearingDifferenceBuffer = new float[Constants.BearingDifferenceBufferSize];

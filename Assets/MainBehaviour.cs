@@ -103,13 +103,13 @@ public class MainBehaviour : MonoBehaviour
         {
             _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             {
-                {3, new LocationPoint{Latitude = 37.4506f, Longitude = 126.65691f, Altitude = 0, TrueHeading = 0}},
-                {23, new LocationPoint{Latitude = 37.4504f, Longitude = 126.65718f, Altitude = 0, TrueHeading = 0}},
-                {26, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65721f, Altitude = 0, TrueHeading = 0}},
-                {29, new LocationPoint{Latitude = 37.45039f, Longitude = 126.65721f, Altitude = 0, TrueHeading = 0}},   
-                {32, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65722f, Altitude = 0, TrueHeading = 0}},   // 플레인 구경
-                {42, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65722f, Altitude = 0, TrueHeading = 0}},
-                {472, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65711f, Altitude = 0, TrueHeading = 0}},   // 플레인 구경
+                {10, new LocationPoint{Latitude = 37.4506f, Longitude = 126.65691f, Altitude = 0, TrueHeading = 0}},
+                {30, new LocationPoint{Latitude = 37.4504f, Longitude = 126.65718f, Altitude = 0, TrueHeading = 0}},
+                {33, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65721f, Altitude = 0, TrueHeading = 0}},
+                {36, new LocationPoint{Latitude = 37.45039f, Longitude = 126.65721f, Altitude = 0, TrueHeading = 0}},   
+                {39, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65722f, Altitude = 0, TrueHeading = 0}},   // 플레인 구경
+                {49, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65722f, Altitude = 0, TrueHeading = 0}},
+                {54, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65711f, Altitude = 0, TrueHeading = 0}},   // 플레인 구경
 
             });
             //            _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
@@ -364,7 +364,7 @@ public class MainBehaviour : MonoBehaviour
             {
                 if (ar3dObject.ObjectType != ArObjectType.ArComment)
                 {
-                    var multiple = 2;
+                    var multiple = 1;
                     ar3dObject.GameObj.GetComponent<DataContainer>().CreatedCameraPosition += moveAmount * multiple;
                     ar3dObject.GameObj.GetComponent<DataContainer>().TargetPosition += moveAmount * multiple;
                     //if (!moveAmount.Equals(Vector3.zero))
