@@ -228,50 +228,7 @@ class LerpReplayLocationProvider : LocationProvider
 
     public override float GetTrueHeading()
     {
-        var currentTime = Time.time - _startTime;
-        var timeList = _locationPoints.Keys.ToList();
-        var index = timeList.BinarySearch(currentTime);
-        int lowerBound, upperBound;
-        if (index >= 0)
-        {
-            if (timeList[0] == currentTime)
-            {
-                lowerBound = 0;
-                upperBound = 1;
-            }
-            else
-            {
-                lowerBound = -1;
-                upperBound = 0;
-            }
-        }
-        else
-        {
-            lowerBound = ~index - 1;
-            upperBound = lowerBound + 1;
-        }
-
-        if (upperBound == 0)
-        {
-            return _locationPoints[timeList.First()].TrueHeading;
-        }
-        else if (upperBound >= _locationPoints.Count)
-        {
-            return _locationPoints[timeList.Last()].TrueHeading;
-        }
-        else
-        {
-            var lowerTime = timeList[lowerBound];
-            var upperTime = timeList[upperBound];
-            var lowerHeading = _locationPoints[lowerTime].TrueHeading;
-            var upperHeading = _locationPoints[upperTime].TrueHeading + 360f;
-            // lowerHeading +/-180 값 안으로 들어오도록 조정
-            if (upperHeading > lowerHeading + 180)
-                upperHeading -= 360;
-            else if (upperHeading < lowerHeading - 180)
-                upperHeading += 360;
-            return (Mathf.Lerp(lowerHeading, upperHeading, (currentTime - lowerTime) / (upperTime - lowerTime)) % 360f + 360f) % 360f;
-        }
+        return Input.compass.trueHeading;
     }
 
     public override float GetHorizontalAccuracy()

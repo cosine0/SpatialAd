@@ -30,7 +30,7 @@ public class OptionBehaviour : MonoBehaviour
         StartCoroutine(GetPointCoroutine());
 
         // 사용자 아이디 필드에 값 표시
-        GameObject.FindGameObjectWithTag("OptionUserId").GetComponent<Text>().text = "    " + _userInfo.UserId;
+        GameObject.FindGameObjectWithTag("OptionUserId").GetComponent<Text>().text = "    " + _userInfo.UserId + "   /   " + _userInfo.UserName;
         // 사용자 포인트 필드에 값 표시
         GameObject.FindGameObjectWithTag("OptionUserPoint").GetComponent<Text>().text = "    " + _userInfo.Point;
 

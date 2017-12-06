@@ -101,15 +101,22 @@ public class MainBehaviour : MonoBehaviour
         }
         else
         {
-            //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
-            //{
-            //    {0, new LocationPoint{Latitude = 37.450590f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 55}}
-            //});
             _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             {
-                {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 15}},
-                {100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+                {3, new LocationPoint{Latitude = 37.4506f, Longitude = 126.65691f, Altitude = 0, TrueHeading = 0}},
+                {23, new LocationPoint{Latitude = 37.4504f, Longitude = 126.65718f, Altitude = 0, TrueHeading = 0}},
+                {26, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65721f, Altitude = 0, TrueHeading = 0}},
+                {29, new LocationPoint{Latitude = 37.45039f, Longitude = 126.65721f, Altitude = 0, TrueHeading = 0}},   
+                {32, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65722f, Altitude = 0, TrueHeading = 0}},   // 플레인 구경
+                {42, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65722f, Altitude = 0, TrueHeading = 0}},
+                {472, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65711f, Altitude = 0, TrueHeading = 0}},   // 플레인 구경
+
             });
+            //            _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
+            //            {
+            //                {0, new LocationPoint{Latitude = 37.450700f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
+            //                {100, new LocationPoint{Latitude = 37.450700f - 0.0006f, Longitude = 126.657100f, Altitude = 0, TrueHeading = -15}}
+            //            });
             //_location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             //{
             //    {10.0f, new LocationPoint{Latitude = 37.450700f - 0.0002f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
@@ -129,7 +136,7 @@ public class MainBehaviour : MonoBehaviour
             //    {50.0f, new LocationPoint{Latitude = 37.450700f - 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}},
             //    {70.0f, new LocationPoint{Latitude = 37.450700f + 0.0001f, Longitude = 126.657100f, Altitude = 0, TrueHeading = 0}}
             //});
-            //_location = new ServerNearestReplayLocationProvider(42);
+//            _location = new ServerNearestReplayLocationProvider(35);
         }
 
         // DontDestroyOnLoad 객체인 ClientInfo, UserInfo 가져오기
