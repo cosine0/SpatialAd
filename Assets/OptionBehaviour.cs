@@ -33,6 +33,8 @@ public class OptionBehaviour : MonoBehaviour
         GameObject.FindGameObjectWithTag("OptionUserId").GetComponent<Text>().text = "    " + _userInfo.UserId + "   /   " + _userInfo.UserName;
         // 사용자 포인트 필드에 값 표시
         GameObject.FindGameObjectWithTag("OptionUserPoint").GetComponent<Text>().text = "    " + _userInfo.Point;
+        // 사용자 이름 필드에 값 표시
+        GameObject.FindGameObjectWithTag("OptionUserName").GetComponent<Text>().text = "    " + _userInfo.UserName;
 
         // 현재 거리 옵션을 UI의 버튼에 적용
         switch (_clientInfo.DistanceOption)
