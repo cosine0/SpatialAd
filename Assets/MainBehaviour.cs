@@ -95,22 +95,21 @@ public class MainBehaviour : MonoBehaviour
 
     private void Start()
     {
-//        if(Application.platform == RuntimePlatform.Android)
-//        {
-//            _location = UnityLocationProvider.Instance;
-//        }
-//        else
+        if(Application.platform == RuntimePlatform.Android)
+        {
+            _location = UnityLocationProvider.Instance;
+        }
+        else
         {
             _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             {
-                {10, new LocationPoint{Latitude = 37.4506f, Longitude = 126.65691f, Altitude = 0, TrueHeading = 0}},
-                {30, new LocationPoint{Latitude = 37.4504f, Longitude = 126.65718f, Altitude = 0, TrueHeading = 0}},
-                {33, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65721f, Altitude = 0, TrueHeading = 0}},
-                {36, new LocationPoint{Latitude = 37.45039f, Longitude = 126.65721f, Altitude = 0, TrueHeading = 0}},   
-                {39, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65722f, Altitude = 0, TrueHeading = 0}},   // 플레인 구경
-                {49, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65722f, Altitude = 0, TrueHeading = 0}},
-                {54, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65711f, Altitude = 0, TrueHeading = 0}},   // 플레인 구경
-
+                {5, new LocationPoint{Latitude = 37.4506f, Longitude = 126.65691f, Altitude = 0, TrueHeading = 0}},
+                {45, new LocationPoint{Latitude = 37.4504f, Longitude = 126.65718f, Altitude = 0, TrueHeading = 0}},
+                {51, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65721f, Altitude = 0, TrueHeading = 0}},
+                {57, new LocationPoint{Latitude = 37.45039f, Longitude = 126.65721f, Altitude = 0, TrueHeading = 0}},
+                {63, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65722f, Altitude = 0, TrueHeading = 0}},   // 플레인 구경
+                {83, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65722f, Altitude = 0, TrueHeading = 0}},
+                {93, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65711f, Altitude = 0, TrueHeading = 0}},   // 플레인  
             });
             //            _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             //            {
