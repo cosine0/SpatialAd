@@ -95,21 +95,21 @@ public class MainBehaviour : MonoBehaviour
 
     private void Start()
     {
-        if(Application.platform == RuntimePlatform.Android)
-        {
-            _location = UnityLocationProvider.Instance;
-        }
-        else
+//        if(Application.platform == RuntimePlatform.Android)
+//        {
+//            _location = UnityLocationProvider.Instance;
+//        }
+//        else
         {
             _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             {
-                {5, new LocationPoint{Latitude = 37.4506f, Longitude = 126.65691f, Altitude = 0, TrueHeading = 0}},
-                {45, new LocationPoint{Latitude = 37.4504f, Longitude = 126.65718f, Altitude = 0, TrueHeading = 0}},
-                {51, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65721f, Altitude = 0, TrueHeading = 0}},
-                {57, new LocationPoint{Latitude = 37.45039f, Longitude = 126.65721f, Altitude = 0, TrueHeading = 0}},
-                {63, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65722f, Altitude = 0, TrueHeading = 0}},   // 플레인 구경
-                {83, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65722f, Altitude = 0, TrueHeading = 0}},
-                {93, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65711f, Altitude = 0, TrueHeading = 0}},   // 플레인  
+                /*출발지점*/{5, new LocationPoint{Latitude = 37.45063f, Longitude = 126.65695f, Altitude = 0, TrueHeading = 0}},
+                /*코너시작*/{45, new LocationPoint{Latitude = 37.4505f, Longitude = 126.65724f, Altitude = 0, TrueHeading = 0}},
+                /*코너중간*/{51, new LocationPoint{Latitude = 37.45048f, Longitude = 126.65726f, Altitude = 0, TrueHeading = 0}},
+                /*고층시작*/{57, new LocationPoint{Latitude = 37.45045f, Longitude = 126.65726f, Altitude = 0, TrueHeading = 0}},
+                /*고층 끝 */{65, new LocationPoint{Latitude = 37.45039f, Longitude = 126.65723f, Altitude = 0, TrueHeading = 0}},   // 플레인 구경
+                /*자세히  */{85, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65726f, Altitude = 0, TrueHeading = 0}},
+                /*3D 보기 */{97, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65711f, Altitude = 0, TrueHeading = 0}},   // 플레인  
             });
             //            _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             //            {
@@ -315,7 +315,7 @@ public class MainBehaviour : MonoBehaviour
         // 앱을 켠 순간의 GPS 좌표 (_clientInfo.StartingXXX)에 대응하는 유니티 좌표와
         // 현재 GPS 좌표 (_clientInfo.CurrentXXX)에 대응하는 유니티 좌표의 차를 구한다.
         Vector3 currentUserPosition = GpsCalulator.CoordinateDifference(_clientInfo.StartingLatitude,
-            _clientInfo.StartingLongitude, _clientInfo.StartingAltitude, _clientInfo.CurrentLatitude,
+            _clientInfo.StartingLongitude, 0, _clientInfo.CurrentLatitude,
             _clientInfo.CurrentLongitude, 0);
 
         // GPS 고도는 무시

@@ -77,9 +77,11 @@ class LerpReplayLocationProvider : LocationProvider
 {
     private readonly SortedDictionary<float, LocationPoint> _locationPoints;
     private float _startTime;
+    private ClientInfo _clientInfo;
 
     public LerpReplayLocationProvider(SortedDictionary<float, LocationPoint> points)
     {
+        _clientInfo = GameObject.FindGameObjectWithTag("ClientInfo").GetComponent<ClientInfo>();
         _startTime = Time.time;
         _locationPoints = points;
     }
@@ -136,8 +138,9 @@ class LerpReplayLocationProvider : LocationProvider
         {
             var lowerTime = timeList[lowerBound];
             var upperTime = timeList[upperBound];
-            return Mathf.Lerp(_locationPoints[lowerTime].Latitude, _locationPoints[upperTime].Latitude,
+            var midPoint = Mathf.Lerp(_locationPoints[lowerTime].Latitude, _locationPoints[upperTime].Latitude,
                 (currentTime - lowerTime) / (upperTime - lowerTime));
+            return midPoint;
         }
     }
 
@@ -228,7 +231,8 @@ class LerpReplayLocationProvider : LocationProvider
 
     public override float GetTrueHeading()
     {
-        return Input.compass.trueHeading;
+        //return Input.compass.trueHeading;
+        return _clientInfo.MainCamera.transform.eulerAngles.y + 14;
     }
 
     public override float GetHorizontalAccuracy()
