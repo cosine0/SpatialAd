@@ -103,13 +103,16 @@ public class MainBehaviour : MonoBehaviour
         {
             _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             {
-                /*출발지점*/{5, new LocationPoint{Latitude = 37.45063f, Longitude = 126.65695f, Altitude = 0, TrueHeading = 0}},
-                /*코너시작*/{45, new LocationPoint{Latitude = 37.4505f, Longitude = 126.65724f, Altitude = 0, TrueHeading = 0}},
-                /*코너중간*/{51, new LocationPoint{Latitude = 37.45048f, Longitude = 126.65726f, Altitude = 0, TrueHeading = 0}},
-                /*고층시작*/{57, new LocationPoint{Latitude = 37.45045f, Longitude = 126.65726f, Altitude = 0, TrueHeading = 0}},
-                /*고층 끝 */{65, new LocationPoint{Latitude = 37.45039f, Longitude = 126.65723f, Altitude = 0, TrueHeading = 0}},   // 플레인 구경
-                /*자세히  */{85, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65726f, Altitude = 0, TrueHeading = 0}},
-                /*3D 보기 */{97, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65711f, Altitude = 0, TrueHeading = 0}},   // 플레인  
+                /*출발지점*/{5, new LocationPoint{Latitude = 37.45053f, Longitude = 126.65714f, Altitude = 0, TrueHeading = 0}},
+                /*코너시작*/{20, new LocationPoint{Latitude = 37.45048f, Longitude = 126.65727f, Altitude = 0, TrueHeading = 0}},
+                /*코너시작*/{30, new LocationPoint{Latitude = 37.45048f, Longitude = 126.65727f, Altitude = 0, TrueHeading = 0}},
+                /*코너시작*/{45, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65713f, Altitude = 0, TrueHeading = 0}},
+//                /*코너중간*/{24, new LocationPoint{Latitude = 37.45048f, Longitude = 126.65726f, Altitude = 0, TrueHeading = 0}},
+//                /*고층시작*/{30, new LocationPoint{Latitude = 37.45045f, Longitude = 126.65726f, Altitude = 0, TrueHeading = 0}},
+//                /*고층 끝 */{38, new LocationPoint{Latitude = 37.45039f, Longitude = 126.65723f, Altitude = 0, TrueHeading = 0}},   // 플레인 구경
+//                /*자세히  */{58, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65726f, Altitude = 0, TrueHeading = 0}},
+//                /*자세히  */{58, new LocationPoint{Latitude = 37.45041f, Longitude = 126.65726f, Altitude = 0, TrueHeading = 0}},
+//                /*3D 보기 */{70, new LocationPoint{Latitude = 37.45046f, Longitude = 126.65711f, Altitude = 0, TrueHeading = 0}},   // 플레인  
             });
             //            _location = new LerpReplayLocationProvider(new SortedDictionary<float, LocationPoint>
             //            {
